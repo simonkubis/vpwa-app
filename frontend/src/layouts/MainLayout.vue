@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+    <q-header class="bg-teal-7">
       <q-toolbar>
         <q-btn
           flat
@@ -12,10 +12,10 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          Chat App
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        
       </q-toolbar>
     </q-header>
 
@@ -24,17 +24,77 @@
       show-if-above
       bordered
     >
-      <q-list>
+      <div class="q-pa-md row items-center justify-between">
+        <div class="row items-center">
+          <q-avatar size="42px" class="bg-grey-3 text-teal-7">
+        <q-icon name="person" size="28px" />
+          </q-avatar>
+          <div class="text-subtitle2 q-ml-md">{username}</div>
+        </div>
+        <div class="row items-center">
+          <q-btn
+        icon="settings"
+        flat
+        round
+        color="teal-7"
+        size="md"
+        aria-label="User Preferences"
+        class="q-mr-xs"
+          >
+        <q-tooltip>Open user preferences</q-tooltip>
+          </q-btn>
+          <q-btn
+        icon="logout"
+        flat
+        round
+        color="teal-7"
+        size="md"
+        aria-label="Logout"
+          >
+        <q-tooltip>Logout</q-tooltip>
+          </q-btn>
+        </div>
+      </div>
+
+      <q-list class="q-pa-md">
         <q-item-label
           header
         >
-          Essential Links
+          Topped channels
         </q-item-label>
 
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
+        <ChannelSideBar
+          v-for="channel in toppedChannelsList"
+          :key="channel.title"
+          v-bind="channel"
+        />
+      </q-list>
+
+      <q-list class="q-pa-md">
+        <q-item-label
+          header
+        >
+          Private channels
+        </q-item-label>
+
+        <ChannelSideBar
+          v-for="channel in privateChannelsList"
+          :key="channel.title"
+          v-bind="channel"
+        />
+      </q-list>
+
+      <q-list class="q-pa-md">
+        <q-item-label
+          header
+        >
+          Public channels
+        </q-item-label>
+
+        <ChannelSideBar
+          v-for="channel in publicChannelsList"
+          :key="channel.title"
+          v-bind="channel"
         />
       </q-list>
     </q-drawer>
@@ -47,50 +107,23 @@
 
 <script setup>
 import { ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+import ChannelSideBar from 'src/components/ChannelList.vue'
 
-const linksList = [
+const toppedChannelsList = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
+    title: 'som pinned'
+  }
+]
+
+const privateChannelsList = [
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
+    title: 'som private'
+  }
+]
+
+const publicChannelsList = [
   {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+    title: 'som public'
   }
 ]
 
