@@ -1,16 +1,7 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header class="bg-teal-7">
-      <q-toolbar>
-        
-        <q-toolbar-title>
-          Chat App
-        </q-toolbar-title>
-
-        
-      </q-toolbar>
-    </q-header>
-
+    
+    <app-header :show-menu="false" title="Login" />
     
 
     <q-page-container>
@@ -18,3 +9,8 @@
     </q-page-container>
   </q-layout>
 </template>
+
+<script setup>
+import AppHeader from 'src/components/AppHeader.vue'
+
+</script>
