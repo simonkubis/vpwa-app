@@ -8,6 +8,18 @@
       <user-profile-header />
 
       <create-channel-bar />
+      <q-list class="q-pa-md">
+      <q-item-label class="q-px-none text-subtitle2 q-mb-md">
+        Invites
+      </q-item-label>
+      <ChannelList
+        v-for="channel in inviteChannelsList"
+        :key="channel.title"
+        v-bind="channel"
+        invites
+        @delete="deleteChannel(channel, 'pinned')"
+      />
+    </q-list>
 
       <q-list class="q-pa-md">
         <q-item-label class="q-px-none text-subtitle2 q-mb-md">
@@ -45,6 +57,15 @@ import UserProfileHeader from 'src/components/UserProfileHeader.vue'
 import CreateChannelBar from 'src/components/CreateChannelBar.vue'
 
 // tieto data budeme brat z BE
+
+const inviteChannelsList = ref([
+  {
+    title: 'som invite a soooooom straaaasne dlllllhy naaazov1'
+  },
+  {
+    title: 'som invite2'
+  },
+])
 
 const pinnedChannelsList = ref([
   {
