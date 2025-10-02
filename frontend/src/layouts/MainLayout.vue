@@ -4,40 +4,30 @@
     <app-header @toggle-drawer="toggleLeftDrawer" />
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <div class="q-pa-md row items-center justify-between">
-        <div class="row items-center">
-          <q-avatar size="42px" class="bg-grey-3 text-teal-7">
-            <q-icon name="person" size="28px" />
-          </q-avatar>
-          <div class="text-subtitle2 q-ml-md">{username}</div>
-        </div>
-        <div class="row items-center">
-          <q-btn icon="settings" flat round color="teal-7" size="md" aria-label="User Preferences" class="q-mr-xs">
-          </q-btn>
-          <q-btn icon="logout" flat round color="teal-7" size="md" aria-label="Logout">
-          </q-btn>
-        </div>
-      </div>
+      
+      <user-profile-header />
+
+      <create-channel-bar />
 
       <q-list class="q-pa-md">
-        <q-item-label header>
-          Topped channels
+        <q-item-label class="q-px-none text-subtitle2 q-mb-md">
+          Pinned channels
         </q-item-label>
-        <ChannelList v-for="channel in toppedChannelsList" :key="channel.title" v-bind="channel" />
+        <ChannelList v-for="channel in pinnedChannelsList" :key="channel.title" v-bind="channel" @delete="deleteChannel(channel, 'pinned')" />
       </q-list>
 
-      <q-list class="q-pa-md">
-        <q-item-label header>
+      <q-list class="q-pa-md" >
+        <q-item-label class="q-px-none text-subtitle2 q-mb-md">
           Private channels
         </q-item-label>
-        <ChannelList v-for="channel in privateChannelsList" :key="channel.title" v-bind="channel" />
+        <ChannelList v-for="channel in privateChannelsList" :key="channel.title" v-bind="channel" @delete="deleteChannel(channel, 'private')" />
       </q-list>
 
       <q-list class="q-pa-md">
-        <q-item-label header>
+        <q-item-label class="q-px-none text-subtitle2 q-mb-md">
           Public channels
         </q-item-label>
-        <ChannelList v-for="channel in publicChannelsList" :key="channel.title" v-bind="channel" />
+        <ChannelList v-for="channel in publicChannelsList" :key="channel.title" v-bind="channel" @delete="deleteChannel(channel, 'public')" />
       </q-list>
     </q-drawer>
 
@@ -51,26 +41,47 @@
 import { ref } from 'vue'
 import ChannelList from 'src/components/ChannelList.vue'
 import AppHeader from 'src/components/AppHeader.vue'
+import UserProfileHeader from 'src/components/UserProfileHeader.vue'
+import CreateChannelBar from 'src/components/CreateChannelBar.vue'
 
 // tieto data budeme brat z BE
 
-const toppedChannelsList = [
+const pinnedChannelsList = ref([
   {
-    title: 'som pinned'
+    title: 'som pinned a soooooom straaaasne dlllllhy naaazov1'
+  },
+  {
+    title: 'som pinned a soooooom straaaasne dlllllhy naaazov2'
+  },
+  {
+    title: 'som pinned a soooooom straaaasne dlllllhy naaazov3'
+  },
+  {
+    title: 'som pinned a soooooom straaaasne dlllllhy naaazov4'
   }
-]
+])
 
-const privateChannelsList = [
+const privateChannelsList = ref([
   {
     title: 'som private'
   }
-]
+])
 
-const publicChannelsList = [
+const publicChannelsList = ref([
   {
     title: 'som public'
   }
-]
+])
+
+
+function deleteChannel(channel, type) {
+  const listMap = {
+    pinned: pinnedChannelsList,
+    private: privateChannelsList,
+    public: publicChannelsList
+  }
+  listMap[type].value = listMap[type].value.filter(c => c.title !== channel.title)
+}
 
 const leftDrawerOpen = ref(false)
 

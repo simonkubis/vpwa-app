@@ -100,6 +100,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const isRegister = ref(false)
 
@@ -121,14 +124,13 @@ function toggleMode() {
 }
 
 function login() {
-    // Add your login logic here
-    alert(`Username: ${loginForm.value.username}\nPassword: ${loginForm.value.password}`)
+
+    // len zatial na demo, ked bude backend overovat
+    router.push('/')
 }
 
 function register() {
     // Add your register logic here
-    alert(
-        `Name: ${registerForm.value.name}\nLast Name: ${registerForm.value.lastName}\nEmail: ${registerForm.value.email}\nNickname: ${registerForm.value.nickname}\nPassword: ${registerForm.value.password}`
-    )
+    router.push('/')
 }
 </script>
