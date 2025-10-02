@@ -6,7 +6,6 @@
       </q-card-section>
 
       <q-card-section>
-        <!-- Your settings form/inputs go here -->
         <div>Settings content...</div>
       </q-card-section>
 
@@ -22,7 +21,6 @@ import { ref } from "vue";
 
 const isOpen = ref(false);
 
-// This function allows the parent to control opening
 function open() {
   isOpen.value = true;
 }

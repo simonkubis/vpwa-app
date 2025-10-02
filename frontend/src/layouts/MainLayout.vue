@@ -73,7 +73,7 @@ const publicChannelsList = ref([
   }
 ])
 
-
+// toto spravime lepsie cez idcka
 function deleteChannel(channel, type) {
   const listMap = {
     pinned: pinnedChannelsList,

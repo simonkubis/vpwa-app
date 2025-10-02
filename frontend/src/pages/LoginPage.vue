@@ -130,7 +130,8 @@ function login() {
 }
 
 function register() {
-    // Add your register logic here
+    
+     // len zatial na demo, ked bude backend overovat
     router.push('/')
 }
 </script>

@@ -4,7 +4,7 @@
             <q-avatar size="42px" class="bg-grey-3 text-teal-7">
                 <q-icon name="person" size="28px" />
             </q-avatar>
-            <div class="text-subtitle2 q-ml-md">{username}</div>
+            <div class="text-subtitle2 q-ml-md">{nickname}</div>
         </div>
         <div class="row items-center">
             <q-btn icon="settings" flat round color="teal-7" size="md" aria-label="User Preferences" class="q-mr-xs" @click="openSettings">
