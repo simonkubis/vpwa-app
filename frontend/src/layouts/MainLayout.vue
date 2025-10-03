@@ -3,23 +3,28 @@
     
     <app-header @toggle-drawer="toggleLeftDrawer" />
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      
+    <q-drawer
+      v-model="leftDrawerOpen"
+      elevated
+      show-if-above
+      class="custom-drawer"
+      :style="{ backgroundColor: '#393939', color: '#fff' }" 
+    >
       <user-profile-header />
 
       <create-channel-bar />
-      <q-list class="q-pa-md">
-      <q-item-label class="q-px-none text-subtitle2 q-mb-md">
-        Invites
-      </q-item-label>
-      <ChannelList
-        v-for="channel in inviteChannelsList"
-        :key="channel.title"
-        v-bind="channel"
-        invites
-        @delete="deleteChannel(channel, 'pinned')"
-      />
-    </q-list>
+      <q-list v-if="inviteChannelsList.length" class="q-pa-md">
+        <q-item-label class="q-px-none text-subtitle2 q-mb-md">
+          Invites
+        </q-item-label>
+        <ChannelList
+          v-for="channel in inviteChannelsList"
+          :key="channel.title"
+          v-bind="channel"
+          invites
+          @delete="deleteChannel(channel, 'pinned')"
+        />
+      </q-list>
 
       <q-list class="q-pa-md">
         <q-item-label class="q-px-none text-subtitle2 q-mb-md">
@@ -50,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, provide } from 'vue'
 import ChannelList from 'src/components/ChannelList.vue'
 import AppHeader from 'src/components/AppHeader.vue'
 import UserProfileHeader from 'src/components/UserProfileHeader.vue'
@@ -59,12 +64,8 @@ import CreateChannelBar from 'src/components/CreateChannelBar.vue'
 // tieto data budeme brat z BE
 
 const inviteChannelsList = ref([
-  {
-    title: 'som invite a soooooom straaaasne dlllllhy naaazov1'
-  },
-  {
-    title: 'som invite2'
-  },
+  { title: 'som public invite1', type: 'public' },
+  { title: 'som private invite2', type: 'private' }
 ])
 
 const pinnedChannelsList = ref([
@@ -93,6 +94,28 @@ const publicChannelsList = ref([
     title: 'som public'
   }
 ])
+
+function getMembership(title) {
+  return inviteChannelsList.value.some(c => c.title === title)
+    ? 'invited'
+    : 'member'
+}
+
+function joinChannel(title) {
+  const channel = inviteChannelsList.value.find(c => c.title === title)
+  if (!channel) return
+
+  inviteChannelsList.value = inviteChannelsList.value.filter(c => c.title !== title)
+
+  if (channel.type === 'private') {
+    privateChannelsList.value.push(channel)
+  } else {
+    publicChannelsList.value.push(channel)
+  }
+}
+
+provide('getMembership', getMembership)
+provide('joinChannel', joinChannel)
 
 // toto spravime lepsie cez idcka
 function deleteChannel(channel, type) {

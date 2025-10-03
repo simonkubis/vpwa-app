@@ -2,12 +2,11 @@
   <q-list dense>
     <q-item
       :class="[
-        'rounded-borders q-pa-none q-mb-sm channel-item',
+        'rounded-borders q-pa-none q-mb-sm channel-item', 
         invites ? 'bg-indigo-5' : 'bg-teal-4'
       ]"
       clickable
-      tag="a"
-      :href="link"
+      :to="`/channel/${title}`" 
     >
       <q-item-section class="q-py-sm q-px-xs main-section" :style="rightPadStyle">
         <q-item-label class="text-white channel-title" :title="`# ${title}`">

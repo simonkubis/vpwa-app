@@ -3,7 +3,7 @@
         <q-toolbar>
             <q-btn v-if="showMenu" flat dense round icon="menu" aria-label="Menu" @click="$emit('toggle-drawer')" />
             <q-toolbar-title>
-                Chat App
+                Smack
             </q-toolbar-title>
         </q-toolbar>
     </q-header>

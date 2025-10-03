@@ -2,12 +2,13 @@
     <q-page class="flex column q-pa-md" style="height: calc(100vh - 50px);">
 
         <!-- Channel bar -->
-        <channel-bar />
+        <channel-bar :channel-name="channelName" />
 
         <!-- Conversation window -->
         <div
             ref="messagesContainer"
-            class="messages-container q-pa-md q-mt-md bg-teal-1 rounded-borders"
+            class="messages-container q-pa-md q-mt-md rounded-borders"
+            style="background-color: #393939;"
             @scroll="onScroll"
         >
             <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="q-mb-sm">
@@ -15,7 +16,7 @@
                     'q-pa-sm rounded-borders inline-block',
                     msg.sender === 'me'
                         ? 'bg-teal-5 text-white self-end'
-                        : 'bg-white text-black self-start',
+                        : 'bg-custom self-start',
                     msg.sender === 'me' ? 'float-right' : 'float-left'
                 ]" style="max-width: 70%; min-width: 150px;">
                     <div class="text-caption text-grey-7" v-if="msg.sender !== 'me'">{{ msg.sender }}</div>
@@ -25,14 +26,31 @@
             </div>
         </div>
 
+        <div  v-if="membership === 'invited'" class="q-mt-md">
+            <q-card flat bordered class="row items-center justify-between q-px-md q-py-sm bg-custom rounded-borders">
+                <div>You are viewing <b>#{{ channelName }}</b></div>
+                <div class="col-auto">
+                <q-btn color="teal-6" unelevated label="Join Channel" class="q-mr-sm" @click="$emit('join')" />
+                <q-btn flat label="See More Details" @click="$emit('see-details')" />
+                </div>
+            </q-card>
+        </div>
         <!-- Message input -->
-        <div class="bg-white q-mt-md">
-            <q-input v-model="newMessage" placeholder="Type a message..." filled color="teal-7"
-                @keyup.enter="sendMessage">
-                <template v-slot:append>
+        <div v-else>
+            <div class="q-mt-md">
+                <q-input
+                v-model="newMessage"
+                placeholder="Type a message..."
+                filled
+                color="teal-6"
+                dark
+                @keyup.enter="sendMessage"
+                >
+                <template #append>
                     <q-btn flat icon="send" @click="sendMessage" />
                 </template>
-            </q-input>
+                </q-input>
+            </div>
         </div>
     </q-page>
 </template>
@@ -40,6 +58,12 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import ChannelBar from 'src/components/ChannelBar.vue'
+
+defineProps({
+  channelName: { type: String, required: true },
+  membership: { type: String, required: true } 
+})
+defineEmits(['join'])
 
 const allMessages = Array.from({ length: 50 }, (_, i) => ({
     id: i + 1,
@@ -117,6 +141,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.bg-custom {
+  background-color: #525252;
+  color: #fff;
+}
 .messages-container {
     flex: 1 1 auto;
     min-height: 0;

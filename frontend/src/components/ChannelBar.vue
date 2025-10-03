@@ -90,7 +90,10 @@
 <script setup>
     import { ref, computed } from 'vue'
 
-    const channelName = ref('general')
+    const props = defineProps({
+      channelName: { type: String, required: true }
+    })
+
     const membersListOpen = ref(false)
     const pinned = ref(false)
 
@@ -106,14 +109,15 @@
 
     // dummy menu handlers
     function onViewDetails() {
-    console.log(`Viewing details for channel #${channelName.value}`)
+      console.log(`Viewing details for channel #${props.channelName}`)
     }
     function onEditNotifications() {
-    console.log(`Editing notifications for channel #${channelName.value}`)
+      console.log(`Editing notifications for channel #${props.channelName}`)
     }
+
     function onTogglePin() {
-    pinned.value = !pinned.value
-    console.log(`${pinned.value ? 'Pinned' : 'Unpinned'} channel #${channelName.value}`)
+      pinned.value = !pinned.value
+      console.log(`${pinned.value ? 'Pinned' : 'Unpinned'} channel #${props.channelName}`)
     }
 </script>
 
