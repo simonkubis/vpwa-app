@@ -57,7 +57,7 @@
 
     <!-- members list -->
     <q-dialog v-model="membersListOpen">
-      <q-card style="min-width: 320px;">
+      <q-card class="dialog-525" style="min-width: 320px;">
         <q-card-section class="row items-center justify-between">
           <div class="text-subtitle1">Members — #{{ channelName }}</div>
           <q-btn dense flat round icon="close" v-close-popup class="text-grey-3" />
@@ -65,7 +65,7 @@
 
         <q-separator color="grey-7" />
 
-        <q-list separator dark>
+        <q-list separator>
           <q-item v-for="(m, i) in members" :key="i" clickable>
             <q-item-section avatar>
               <q-avatar>
