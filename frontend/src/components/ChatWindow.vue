@@ -17,6 +17,7 @@
                     msg.sender === 'me'
                         ? 'bg-teal-5 text-white self-end'
                         : 'bg-custom self-start',
+                    msg.content.includes('@user') ? 'border border-yellow-5' : '',
                     msg.sender === 'me' ? 'float-right' : 'float-left'
                 ]" style="max-width: 70%; min-width: 150px;">
                     <div class="text-caption text-grey-7" v-if="msg.sender !== 'me'">{{ msg.sender }}</div>
@@ -58,6 +59,9 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import ChannelBar from 'src/components/ChannelBar.vue'
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
 
 defineProps({
   channelName: { type: String, required: true },
@@ -71,6 +75,13 @@ const allMessages = Array.from({ length: 50 }, (_, i) => ({
     content: `Message #${i + 1}`,
     time: `09:${(i + 1).toString().padStart(2, '0')}`
 }))
+
+allMessages.push({
+    id: 51,
+    sender: 'Bob',
+    content: `Hello everyone! Especially @user`,
+    time: `10:00`
+})
 
 const messages = ref([])
 const messagesContainer = ref(null)
@@ -120,6 +131,16 @@ function sendMessage() {
         content: newMessage.value,
         time
     })
+
+
+    $q.notify({
+        type: 'positive',
+        message: 'Message sent!',
+        timeout: 1500,
+        position: 'top-right',
+        icon: 'send'
+    })
+
     newMessage.value = ''
     nextTick(() => {
         if (messagesContainer.value) {
@@ -159,4 +180,10 @@ onMounted(() => {
 .self-start {
     align-self: flex-start;
 }
+
+.border-yellow-5 {
+  border: 2px solid teal; /* or your Quasar yellow variable */
+}
+
+
 </style>

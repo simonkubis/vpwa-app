@@ -83,7 +83,7 @@
 
     <!-- channel details -->
     <q-dialog v-model="detailsOpen">
-      <q-card class="dialog-525" style="min-width: 420px;">
+      <q-card class="dialog-525" style="width: 100%; max-width: 420px;">
         <q-card-section class="row items-center justify-between">
           <div class="text-subtitle1">Channel details</div>
           <q-btn dense flat round icon="close" v-close-popup class="text-grey-3" />

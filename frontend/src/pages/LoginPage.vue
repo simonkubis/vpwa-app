@@ -1,6 +1,6 @@
 <template>
     <div class="q-pa-md flex flex-center">
-        <q-card class="q-pa-lg absolute-center" style="min-width:500px;">
+        <q-card class="q-pa-lg absolute-center" style="width: 94%; max-width: 500px;">
             <q-card-section>
                 <div class="text-h6 text-center q-mb-md">
                     {{ isRegister ? 'Register' : 'Login' }}
