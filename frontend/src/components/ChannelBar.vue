@@ -124,6 +124,7 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
 import { date } from 'quasar'
+import { defineExpose } from 'vue'
 
 const props = defineProps({
   channelName: { type: String, required: true }
@@ -144,6 +145,10 @@ const members = ref([
 ])
 
 const displayedMembers = computed(() => members.value.slice(0, 3))
+
+function openMembersList () {
+  membersListOpen.value = true
+}
 
 const details = computed(() => {
   const meta = getChannelMeta(props.channelName)
@@ -171,6 +176,9 @@ function onTogglePin() {
   pinned.value = !pinned.value
   console.log(`${pinned.value ? 'Pinned' : 'Unpinned'} channel #${props.channelName}`)
 }
+
+defineExpose({ openMembersList })
+
 </script>
 
 <style scoped>
