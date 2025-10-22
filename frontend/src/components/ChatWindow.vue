@@ -21,7 +21,7 @@
                     msg.sender === 'me' ? 'float-right' : 'float-left'
                 ]" style="max-width: 70%; min-width: 150px;">
                     <div class="text-caption text-grey-7" v-if="msg.sender !== 'me'">{{ msg.sender }}</div>
-                    <div>{{ msg.content }}</div>
+                    <div :class="msg.content == 'is typing...' ? 'text-red': ''">{{ msg.content }}</div>
                     <div class="text-left text-caption text-grey-5">{{ msg.time }}</div>
                 </div>
             </div>
@@ -81,6 +81,11 @@ allMessages.push({
     sender: 'Bob',
     content: `Hello everyone! Especially @user`,
     time: `10:00`
+}, {
+    id: 52,
+    sender: 'Michal',
+    content: `is typing...`,
+    time: `-`
 })
 
 const messages = ref([])
