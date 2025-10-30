@@ -130,6 +130,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import ChannelBar from 'src/components/ChannelBar.vue'
+import { useQuasar } from 'quasar'
 
 const slashCommands = [
     {
@@ -139,12 +140,12 @@ const slashCommands = [
         run: () => channelBarRef.value?.openMembersList?.()
     },
     {
-    name: 'join',
-    description: 'Join a channel: /join <channelName>',
-    type: 'channel',
-    run: ([channel]) => {
-        console.log('joining channel:', channel)
-    },
+        name: 'join',
+        description: 'Join a channel: /join <channelName>',
+        type: 'channel',
+        run: ([channel]) => {
+            console.log('joining channel:', channel)
+        },
     },
     {
         name: 'list1',
@@ -184,6 +185,7 @@ allMessages.push({
     content: `Hello everyone! Especially @user`,
     time: `10:00`
 })
+const $q = useQuasar()
 
 defineProps({
   channelName: { type: String, required: true },
@@ -328,9 +330,18 @@ function sendMessage() {
         return
     }
 
+
     const now = new Date()    
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     messages.value.push({ id: Date.now(), sender: 'me', content: text, time })
+
+    $q.notify({
+        message: 'Message sent',
+        color: 'indigo-5',
+        position: 'top-right',
+        icon : 'send',
+        timeout: 1000
+    })
 
     newMessage.value = ''
     nextTick(() => {

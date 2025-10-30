@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="isOpen">
-    <q-card style="width: 100%; max-width: 500px;">
+    <q-card dark style="width: 100%; max-width: 500px; background: #525252;">
      <q-card-section class="text-h6">
         User Preferences
       </q-card-section>
@@ -30,7 +30,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
+
+const emit = defineEmits(['dnd-changed'])
 
 const isOpen = ref(false)
 const dndEnabled = ref(false)
@@ -43,23 +45,15 @@ function close() {
   isOpen.value = false
 }
 
-function saveAndClose() {
-  // persist setting (simple localStorage example)
-  
+function saveAndClose() {  
   localStorage.setItem('dndEnabled', dndEnabled.value ? '1' : '0')
-
+  emit('dnd-changed', dndEnabled.value)
   close()
 }
 
-// initialize from storage
 onMounted(() => {
   const val = localStorage.getItem('dndEnabled')
   if (val !== null) dndEnabled.value = val === '1'
-})
-
-// keep storage in sync when toggled
-watch(dndEnabled, (v) => {
-  localStorage.setItem('dndEnabled', v ? '1' : '0')
 })
 
 defineExpose({ open, dndEnabled })
