@@ -24,7 +24,7 @@ const channelName = ref('')
 
 
 function createChannel() {
-
+    console.log('Creating channel:', channelName.value)
     
 }
 </script>
