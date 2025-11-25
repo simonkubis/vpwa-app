@@ -1,1 +1,0 @@
-# vpwa-app

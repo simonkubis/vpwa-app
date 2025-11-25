@@ -10,9 +10,14 @@
       </div>
 
       <div class="text-caption text-grey-6 row items-center">
-        <q-icon name="circle" size="10px" class="q-mr-xs" :color="dndEnabled ? 'grey-5' : 'teal-5'" />
-        {{ dndEnabled ? 'DnD' : 'Online' }}
-      </div>
+      <q-icon
+        name="circle"
+        size="10px"
+        class="q-mr-xs"
+        :color="statusColor"
+      />
+      {{ statusLabel }}
+    </div>
     </div>
 
     <div class="row items-center no-wrap" style="flex:0 0 auto;">
@@ -22,19 +27,37 @@
   </div>
 
   <q-separator />
-  <SettingsPopupModal ref="settingsModal" @dnd-changed="dndEnabled = $event" />
+  <SettingsPopupModal ref="settingsModal" @settings-changed="handleSettingsChanged" />
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import SettingsPopupModal from "src/components/SettingsPopupModal.vue";
 import { useRouter } from 'vue-router'
+import axios from 'axios'
+
 
 const router = useRouter()
 
 const settingsModal = ref(null);
-const dndEnabled = ref(localStorage.getItem('dndEnabled') === '1')
 const nickname = ref('Guest')
+
+const status = ref(null)
+const API_URL = import.meta.env.VITE_API_URL
+
+async function loadInitialSettings() {
+  try {
+    const res = await axios.get(`${API_URL}/settings`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+      }
+    })
+    status.value = res.data.status
+  } catch (err) {
+    console.error("Failed to load settings", err)
+    status.value = "online"   // fallback
+  }
+}
 
 function readNickname() {
   try {
@@ -48,8 +71,27 @@ function onAuthChanged(e) {
   nickname.value = user?.nickname || 'Guest'
 }
 
+function handleSettingsChanged(newSettings) {
+  status.value = newSettings.status
+  console.log("Parent received settings:", newSettings)
+  // You can now update parent state, refresh UI, call API, etc.
+}
+
+const statusLabel = computed(() => {
+  if (status.value === 'dnd') return 'DnD'
+  if (status.value === 'offline') return 'Offline'
+  return 'Online'
+})
+
+const statusColor = computed(() => {
+  if (status.value === 'dnd') return 'grey-5'
+  if (status.value === 'offline') return 'red-5'
+  return 'teal-5'
+})
+
 onMounted(() => {
   readNickname()
+  loadInitialSettings()
   window.addEventListener('auth:changed', onAuthChanged)
 })
 
@@ -65,7 +107,7 @@ async function logout() {
 
     const token = localStorage.getItem('auth.token')
     if (token) {
-      await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+      await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       })

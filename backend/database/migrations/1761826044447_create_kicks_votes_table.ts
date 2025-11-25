@@ -9,8 +9,7 @@ export default class KicksVotes extends BaseSchema {
 
       table.bigInteger('channel_id').unsigned().references('channels.id').onDelete('CASCADE')
       table.bigInteger('user_id').unsigned().references('users.id').onDelete('CASCADE')
-
-      table.unique(['channel_id', 'user_id'])
+      table.bigInteger('kicker_id').unsigned().references('users.id').onDelete('CASCADE')
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
     })
   }

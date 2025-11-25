@@ -6,7 +6,7 @@ export default class Channels extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.bigIncrements('id').primary()
-      table.string('name', 100).notNullable().unique()
+      table.string('name', 100).notNullable()
       table.enum('visibility', ['public', 'private']).notNullable().defaultTo('public')
       table.bigInteger('owner_id').unsigned().references('users.id').onDelete('CASCADE')
       table.text('description').nullable()

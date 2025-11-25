@@ -11,6 +11,7 @@ export default class ChannelMembers extends BaseSchema {
       table.timestamp('left_at', { useTz: true }).nullable()
       table.boolean('is_banned').notNullable().defaultTo(false)
       table.boolean('is_pinned').notNullable().defaultTo(false)
+      table.boolean('is_invited').notNullable().defaultTo(false)
 
       table.bigInteger('user_id').unsigned().references('users.id').onDelete('CASCADE')
       table.bigInteger('channel_id').unsigned().references('channels.id').onDelete('CASCADE')

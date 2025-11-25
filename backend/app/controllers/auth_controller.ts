@@ -35,6 +35,7 @@ function toPublicUser(u: User) {
   }
 }
 
+
 export default class AuthController {
   async register({ request, auth, response }: HttpContext) {
     const payload = await request.validateUsing(registerValidator)
@@ -44,12 +45,6 @@ export default class AuthController {
       User.findBy('nickname', payload.nickname),
     ])
 
-    if (emailExists || nickExists) {
-      const errors = []
-      if (nickExists) errors.push({ message: 'Nickname is already taken' })
-      if (emailExists) errors.push({ message: 'Email is already registered' })
-      return response.status(409).send({ errors })
-    }
     if (emailExists || nickExists) {
       const errors = []
       if (nickExists) errors.push({ message: 'Nickname is already taken' })
@@ -77,7 +72,7 @@ export default class AuthController {
     try {
       const user = await User.verifyCredentials(username, password)
       const token = await auth.use('api').createToken(user)
-      return { token, user: toPublicUser(user) }
+      return { token: token.value!.release(), user: toPublicUser(user) }
     } catch (error) {
       if (error instanceof authErrors.E_INVALID_CREDENTIALS) {
         return response.unauthorized({ errors: [{ message: 'Invalid credentials' }] })

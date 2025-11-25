@@ -8,8 +8,6 @@ export default class Messages extends BaseSchema {
       table.bigIncrements('id').primary()
       table.text('body').notNullable()
 
-      table.specificType('mentions', 'text[]').nullable()
-
       table.bigInteger('user_id').unsigned().references('users.id').onDelete('CASCADE')
       table.bigInteger('channel_id').unsigned().references('channels.id').onDelete('CASCADE')
 

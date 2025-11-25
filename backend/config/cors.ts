@@ -12,7 +12,7 @@ const corsConfig = defineConfig({
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
   headers: true,
   exposeHeaders: [],
-  credentials: false,
+  credentials: true,
 })
 
 export default corsConfig

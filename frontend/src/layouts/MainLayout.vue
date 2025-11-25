@@ -1,28 +1,25 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    
+
     <app-header @toggle-drawer="toggleLeftDrawer" />
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      elevated
-      show-if-above
-      class="custom-drawer"
-      :style="{ backgroundColor: '#393939', color: '#fff' }" 
-    >
+    <q-drawer v-model="leftDrawerOpen" elevated show-if-above class="custom-drawer"
+      :style="{ backgroundColor: '#393939', color: '#fff' }">
       <user-profile-header />
 
-      <create-channel-bar />
+      <create-channel-bar @channelCreated="loadChannels" />
       <q-list v-if="inviteChannelsList.length" class="q-pa-md">
         <q-item-label class="q-px-none text-subtitle2 q-mb-md">
           Invites
         </q-item-label>
+        
         <ChannelList
-          v-for="channel in inviteChannelsList"
-          :key="channel.title"
-          v-bind="channel"
-          invites
-          @delete="deleteChannel(channel, 'pinned')"
+          v-for="invite in inviteChannelsList"
+          :key="invite.channel_id"
+          v-bind="invite"
+          @delete="deleteChannel(invite)"
+          @accept="acceptInvite(invite)"
+          @decline="declineInvite(invite)"
         />
       </q-list>
 
@@ -30,157 +27,314 @@
         <q-item-label class="q-px-none text-subtitle2 q-mb-md">
           Pinned channels
         </q-item-label>
-        <ChannelList v-for="channel in pinnedChannelsList" :key="channel.title" v-bind="channel" @delete="deleteChannel(channel, 'pinned')" />
+        <ChannelList
+          v-for="channel in pinnedChannelsList"
+          :key="channel.id"
+          v-bind="channel"
+          @delete="deleteChannel(channel)"
+          @leave="leaveChannel(channel)"
+        />
       </q-list>
 
-      <q-list class="q-pa-md" >
+      <q-list class="q-pa-md">
         <q-item-label class="q-px-none text-subtitle2 q-mb-md">
           Private channels
         </q-item-label>
-        <ChannelList v-for="channel in privateChannelsList" :key="channel.title" v-bind="channel" @delete="deleteChannel(channel, 'private')" />
+        <ChannelList
+          v-for="channel in privateChannelsList"
+          :key="channel.id"
+          v-bind="channel"
+          @delete="deleteChannel(channel)"
+          @leave="leaveChannel(channel)"
+        />
       </q-list>
 
       <q-list class="q-pa-md">
         <q-item-label class="q-px-none text-subtitle2 q-mb-md">
           Public channels
         </q-item-label>
-        <ChannelList v-for="channel in publicChannelsList" :key="channel.title" v-bind="channel" @delete="deleteChannel(channel, 'public')" />
+        <ChannelList
+          v-for="channel in publicChannelsList"
+          :key="channel.id"
+          v-bind="channel"
+          @delete="deleteChannel(channel)"
+          @leave="leaveChannel(channel)"
+        />
       </q-list>
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <router-view @pinnedToggled="loadChannels"/>
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup>
-import { ref, provide } from 'vue'
+import { ref, onMounted, provide } from 'vue'
 import ChannelList from 'src/components/ChannelList.vue'
 import AppHeader from 'src/components/AppHeader.vue'
 import UserProfileHeader from 'src/components/UserProfileHeader.vue'
 import CreateChannelBar from 'src/components/CreateChannelBar.vue'
+import axios from 'axios';
 
-// tieto data budeme brat z BE
 
-const inviteChannelsList = ref([
-  {
-    title: 'som public invite1',
-    type: 'public',
-    description: 'Welcome thread for newcomers.',
-    visibility: 'public',
-    ownerName: 'alice',
-    createdAt: '2025-09-20T09:15:00Z'
-  },
-  {
-    title: 'som private invite2',
-    type: 'private',
-    description: 'Core team planning.',
-    visibility: 'private',
-    ownerName: 'bob',
-    createdAt: '2025-09-28T12:40:00Z'
-  }
-])
+const API_URL = import.meta.env.VITE_API_URL
 
-const pinnedChannelsList = ref([
-  {
-    title: 'som pinned a soooooom straaaasne dlllllhy naaazov1',
-    description: 'release coordination.',
-    visibility: 'public',
-    ownerName: 'diana',
-    createdAt: '2025-09-01T08:00:00Z'
-  },
-  {
-    title: 'som pinned a soooooom straaaasne dlllllhy naaazov2',
-    description: 'incident updates.',
-    visibility: 'public',
-    ownerName: 'charlie',
-    createdAt: '2025-09-05T10:30:00Z'
-  },
-  {
-    title: 'som pinned a soooooom straaaasne dlllllhy naaazov3',
-    description: 'design reviews.',
-    visibility: 'private',
-    ownerName: 'ed',
-    createdAt: '2025-09-07T14:00:00Z'
-  },
-  {
-    title: 'som pinned a soooooom straaaasne dlllllhy naaasdagfasdrghasdgasdgasgzov4',
-    description: 'community notes.',
-    visibility: 'public',
-    ownerName: 'alice',
-    createdAt: '2025-09-10T16:45:00Z'
-  }
-])
+const inviteChannelsList = ref([])
 
-const privateChannelsList = ref([
-  {
-    title: 'som private',
-    description: 'Private backlog grooming.',
-    visibility: 'private',
-    ownerName: 'bob',
-    createdAt: '2025-09-15T09:00:00Z'
-  }
-])
+const pinnedChannelsList = ref([])
 
-const publicChannelsList = ref([
-  {
-    title: 'som public',
-    description: 'General discussion.',
-    visibility: 'public',
-    ownerName: 'alice',
-    createdAt: '2025-09-12T13:20:00Z'
-  }
-])
+const privateChannelsList = ref([])
 
-function getMembership(title) {
-  return inviteChannelsList.value.some(c => c.title === title)
-    ? 'invited'
-    : 'member'
-}
-
-function joinChannel(title) {
-  const channel = inviteChannelsList.value.find(c => c.title === title)
-  if (!channel) return
-
-  inviteChannelsList.value = inviteChannelsList.value.filter(c => c.title !== title)
-
-  if (channel.type === 'private') {
-    privateChannelsList.value.push(channel)
-  } else {
-    publicChannelsList.value.push(channel)
-  }
-}
-
-provide('getMembership', getMembership)
-provide('joinChannel', joinChannel)
-provide('getChannelMeta', getChannelMeta)
-
-// toto spravime lepsie cez idcka
-function deleteChannel(channel, type) {
-  const listMap = {
-    pinned: pinnedChannelsList,
-    private: privateChannelsList,
-    public: publicChannelsList
-  }
-  listMap[type].value = listMap[type].value.filter(c => c.title !== channel.title)
-}
-
-function getChannelMeta(title) {
-  const lists = [
-    ...inviteChannelsList.value,
-    ...pinnedChannelsList.value,
-    ...privateChannelsList.value,
-    ...publicChannelsList.value
-  ]
-  return lists.find(c => c.title === title) || null
-}
+const publicChannelsList = ref([])
 
 const leftDrawerOpen = ref(false)
+
+
+// Placeholder functions
+async function acceptInvite(invite) {
+  try {
+    console.log('Accepting invite for channel:', invite.channel_id)
+
+    await axios.post(
+      `${API_URL}/channels/invite/accept`,
+      { channelId: invite.channel_id },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+        },
+      }
+    )
+
+    // Reload channels after accepting invite
+    await loadChannels()
+  } catch (error) {
+    console.error('Failed to accept invite:', error)
+  }
+}
+
+async function declineInvite(invite) {
+  try {
+    console.log('Declining invite for channel:', invite.channel_id)
+
+    await axios.delete(`${API_URL}/channels/invite/decline`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+      },
+      data: {
+        channelId: invite.channel_id, // DELETE with body
+      },
+    })
+
+    // Reload channels after declining invite
+    await loadChannels()
+  } catch (error) {
+    console.error('Failed to decline invite:', error)
+  }
+}
+
+async function revokeUser(channel, userNickname) {
+  try {
+    const channelId = channel.channel_id || channel.id
+    console.log(`Revoking user ${userNickname} from channel:`, channelId)
+
+    await axios.post(
+      `${API_URL}/channels/revoke`,
+      {
+        channelId,
+        nickname: userNickname,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+        },
+      }
+    )
+
+    await loadChannels()
+    console.log(`User ${userNickname} successfully revoked from channel ${channelId}`)
+  } catch (error) {
+    console.error(`Failed to revoke user ${userNickname} from channel:`, error)
+  }
+}
+
+
+async function leaveChannel(channel) {
+  try {
+    console.log('Leaving channel:', channel.channel_id || channel.id)
+
+    await axios.delete(`${API_URL}/channels/leave`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+      },
+      data: {
+        channelId: channel.channel_id || channel.id,
+      },
+    })
+
+    // Refresh lists after leaving
+    await loadChannels()
+  } catch (error) {
+    console.error('Failed to leave channel:', error)
+  }
+}
+
+async function deleteChannel(channel) {
+  try {
+    console.log('Deleting channel:', channel.channel_id || channel.id)
+
+    await axios.delete(`${API_URL}/channels/delete`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+      },
+      data: {
+        channelId: channel.channel_id || channel.id,
+      },
+    })
+
+    // Refresh after deletion
+    await loadChannels()
+  } catch (error) {
+    console.error('Failed to delete channel:', error)
+  }
+}
+
+async function kickUser(channel, userNickname) {
+  try {
+    const response = await axios.post(
+      `${API_URL}/kicks`,
+      {
+        channelId: channel.channel_id || channel.id,
+        nickname: userNickname, // send nickname instead of userId
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+        },
+      }
+    );
+
+    const data = response.data;
+    const message = response.data.message;
+
+    console.log(message, data);
+
+    // Optional: refresh channels or members list after kick
+    await loadChannels(); // or loadChannelMembers(channelId)
+
+    return data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Kick failed:', error.response.data);
+      alert(error.response.data.error || error.response.data.message);
+    } else {
+      console.error('Kick failed:', error);
+      alert('Failed to kick user. Please try again.');
+    }
+  }
+}
+
+async function inviteToChannel(channelId, userNickname) {
+  try {
+    const response = await axios.post(
+      `${API_URL}/channels/invite`,
+      {
+        channelId: channelId,
+        nickname: userNickname,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+        },
+      }
+    );
+
+    const data = response.data.data;
+    const message = response.data.message;
+
+    console.log(message, data);
+
+    // Refresh channels list after inviting
+    await loadChannels();
+
+    return data;
+  } catch (error) {
+    console.error('Failed to invite user to channel:', error);
+  }
+}
+
+
+
+
+async function joinOrCreateChannel(channelName, visibility = 'public') {
+  try {
+    // Send POST request to join or create the channel
+    const response = await axios.post(
+      `${API_URL}/channels/join-or-create`,
+      {
+        name: channelName,
+        visibility: visibility,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+        },
+      }
+    )
+
+    const { channel, membership } = response.data.data || {}
+    const message = response.data.message
+
+    console.log(message, { channel, membership })
+
+    await loadChannels()
+
+    return { channel, membership }
+  } catch (error) {
+    console.error('Failed to join or create channel:', error)
+  }
+}
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
+
+
+async function loadChannels() {
+  try {
+    const response = await axios.get(`${API_URL}/channels/members`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
+      },
+    });
+
+    const channels = response.data.data;
+    console.log('Loaded channels:', channels);
+    inviteChannelsList.value = channels.filter(channel => channel.is_invited);
+    pinnedChannelsList.value = channels.filter(channel => channel.is_pinned);
+    privateChannelsList.value = channels.filter(channel => channel.visibility === 'private' && !channel.is_invited && !channel.is_pinned && !channel.is_banned);
+    publicChannelsList.value = channels.filter(channel => channel.visibility === 'public' && !channel.is_invited && !channel.is_pinned && !channel.is_banned);
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      console.error('Unauthorized: Please log in again.');
+    } else {
+      console.error('Failed to load channels:', error);
+    }
+  }
+}
+
+provide('loadChannels', loadChannels)
+provide('deleteChannel', deleteChannel)
+provide('joinOrCreateChannel', joinOrCreateChannel)
+provide('leaveChannel', leaveChannel)
+provide('inviteToChannel', inviteToChannel)
+provide('revokeUser', revokeUser)
+provide('kickUser', kickUser)
+
+
+onMounted(() => {
+  loadChannels();
+});
 </script>
 
 <style scoped>

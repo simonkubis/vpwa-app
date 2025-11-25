@@ -219,19 +219,30 @@ async function onSubmit () {
   }
 }
 
-async function doLogin () {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(loginForm.value),
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw { status: res.status, data }
-  localStorage.setItem('auth.token', data.token.value)
-  localStorage.setItem('auth.user', JSON.stringify(data.user))
-  window.dispatchEvent(new CustomEvent('auth:changed', { detail: data.user }))
-  router.push('/')
+async function doLogin() {
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(loginForm.value),
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw { status: res.status, data }
+
+    if (!data.token) throw new Error('No token returned from login')
+
+    localStorage.setItem('auth.token', data.token)
+    localStorage.setItem('auth.user', JSON.stringify(data.user))
+    console.log(localStorage.getItem('auth.token')?.length)
+    window.dispatchEvent(new CustomEvent('auth:changed', { detail: data.user }))
+    router.push('/')
+  } catch (err) {
+    console.error('Login failed', err)
+    // optionally show error message in UI
+  }
 }
+
 
 async function doRegister () {
     const res = await fetch(`${API_URL}/auth/register`, {
