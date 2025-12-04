@@ -254,7 +254,8 @@ async function doRegister () {
 
     if (!res.ok) throw { status: res.status, data }
 
-    localStorage.setItem('auth.token', data.token.value)
+    localStorage.setItem('auth.token', data.token)
+    console.log("[][][] TOKEN LENGTH FROM REGISTER: " + localStorage.getItem('auth.token')?.length)
     localStorage.setItem('auth.user', JSON.stringify(data.user))
     window.dispatchEvent(new CustomEvent('auth:changed', { detail: data.user }))
     router.push('/')

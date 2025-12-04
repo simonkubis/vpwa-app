@@ -39,7 +39,7 @@ function toPublicUser(u: User) {
 export default class AuthController {
   async register({ request, auth, response }: HttpContext) {
     const payload = await request.validateUsing(registerValidator)
-    
+
     const [emailExists, nickExists] = await Promise.all([
       User.findBy('email', payload.email),
       User.findBy('nickname', payload.nickname),
@@ -57,14 +57,20 @@ export default class AuthController {
       firstName: payload.name,
       lastName: payload.lastName,
       email: payload.email,
-      password: payload.password,  
+      password: payload.password,
       status: 'online',
       notifPref: 'all',
     })
 
-    const token = await auth.use('api').createToken(user) 
-    return response.created({ token, user: toPublicUser(user) })
+    const token = await auth.use('api').createToken(user)
+
+    // IMPORTANT: same shape as login()
+    return response.created({
+      token: token.value!.release(),
+      user: toPublicUser(user)
+    })
   }
+
 
   async login({ request, auth, response }: HttpContext) {
     const { username, password } = await request.validateUsing(loginValidator)
