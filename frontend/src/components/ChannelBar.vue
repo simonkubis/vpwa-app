@@ -15,7 +15,7 @@
         <div class="row items-center no-wrap">
           <div class="row items-center avatar-stack">
             <q-avatar
-              v-for="(m, i) in displayedMembers"
+              v-for="(m, i) in displayedMembers.filter(x => !x.isBanned).length"
               :key="i"
               size="28px"
               class="avatar-overlap"
@@ -23,7 +23,7 @@
               <img :src="m.avatar || defaultAvatar(i)" :alt="m.username" />
             </q-avatar>
           </div>
-          <div class="q-ml-sm text-weight-medium">{{ members.length }}</div>
+          <div class="q-ml-sm text-weight-medium">{{ members.filter(x => !x.isBanned).length }}</div>
         </div>
       </q-btn>
 
@@ -70,7 +70,7 @@
         <q-separator color="grey-7" />
 
         <q-list separator>
-          <q-item v-for="(m, i) in members" :key="i" clickable>
+          <q-item v-for="(m, i) in members.filter(x => !x.isBanned)" :key="i" clickable>
             <q-item-section avatar>
               <q-avatar>
                 <img :src="m.avatar || defaultAvatar(i)" :alt="m.nickname" />
@@ -82,7 +82,7 @@
                 {{ m.isInvited ? 'Invited' : m.isAdmin ? 'Admin' : 'Member' }}
               </q-item-label>
               <q-item-label caption class="text-grey-4">
-                Status: {{ m.status  }}
+                Status: {{ m.status  }} 
               </q-item-label>
             </q-item-section>
           </q-item>

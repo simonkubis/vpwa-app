@@ -3,6 +3,7 @@ import KickVote from '#models/kick_votes'
 import ChannelMember from '#models/channel_members'
 import User from '#models/user'
 import transmit from '@adonisjs/transmit/services/main'
+import is from '@adonisjs/core/helpers/is'
 
 export default class KickVotesController {
     public async kickUser({ request, auth, response }: HttpContext) {
@@ -34,6 +35,7 @@ export default class KickVotesController {
         }
 
         const isAdminKick = kickerMember.isAdmin
+        console.log(`User ${kicker.nickname} (ID: ${kicker.id}) is attempting to kick ${nickname} (ID: ${userId}) from channel ID ${numericChannelId}. Admin kick: ${isAdminKick}`)
 
         // Check if the kicker already voted to kick this user
         const existingVote = await KickVote.query()
@@ -42,7 +44,7 @@ export default class KickVotesController {
             .andWhere('kicker_id', kicker.id)
             .first()
 
-        if (existingVote) {
+        if (existingVote && isAdminKick === false) {
             return response.badRequest({ message: 'You have already kicked this user.' })
         }
 
@@ -84,7 +86,7 @@ export default class KickVotesController {
         }
 
         // 6. Broadcast refresh
-        const payload = { event: 'refresh', userId: kicker.id };
+        const payload = { event: 'refresh', userId: null };
         for (const member of channelMembers) {
             transmit.broadcast(`user/${member.userId}`, payload);
         }

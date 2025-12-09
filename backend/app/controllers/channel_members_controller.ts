@@ -80,7 +80,7 @@ export default class ChannelMembersController {
       await membership.delete()
 
       // Broadcast refresh to all previous members (including the revoked user)
-      const payload = { event: 'refresh', userId: adminUser.id }
+      const payload = { event: 'refresh', userId: null }
       for (const member of channelMembers) {
         transmit.broadcast(`user/${member.userId}`, payload)
       }

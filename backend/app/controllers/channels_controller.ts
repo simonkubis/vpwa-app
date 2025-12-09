@@ -8,14 +8,14 @@ import transmit from '@adonisjs/transmit/services/main'
 export default class ChannelsController {
 
   public async exists({ params, response }: HttpContext) {
-  const channel = await Channel.find(params.id)
+    const channel = await Channel.find(params.id)
 
-  if (!channel) {
-    return response.notFound({ exists: false })
+    if (!channel) {
+      return response.notFound({ exists: false })
+    }
+
+    return { exists: true, channel }
   }
-
-  return { exists: true, channel }
-}
 
   public async create({ request, auth, response }: HttpContext) {
     try {
@@ -28,6 +28,17 @@ export default class ChannelsController {
       ])
 
       console.log('Creating channel with data:', { name, visibility, description, users })
+
+      // 🔎 CHECK IF CHANNEL NAME EXISTS (case-insensitive is optional)
+      const existingChannel = await Channel.query()
+        .whereRaw('LOWER(name) = ?', [name.toLowerCase()])
+        .first()
+
+      if (existingChannel) {
+        return response.status(409).json({
+          error: 'Channel name already exists',
+        })
+      }
 
       // 1. create channel
       const channel = await Channel.create({
@@ -53,16 +64,17 @@ export default class ChannelsController {
               isAdmin: false,
               userId: invitedUser.id,
               channelId: channel.id,
-              isInvited: true, // Mark as invited
+              isInvited: true,
             })
           }
         }
       }
 
-      const payload = { event: 'refresh', userId: user.id };
-      const channelMembers = await ChannelMember.query().select('user_id');
+      // Broadcast refresh to all users
+      const payload = { event: 'refresh', userId: user.id }
+      const channelMembers = await ChannelMember.query().select('user_id')
       for (const member of channelMembers) {
-        transmit.broadcast(`user/${member.userId}`, payload);
+        transmit.broadcast(`user/${member.userId}`, payload)
       }
 
       return response.created({ data: channel })
@@ -71,4 +83,5 @@ export default class ChannelsController {
       return response.internalServerError({ error: 'Failed to create channel' })
     }
   }
+
 }
