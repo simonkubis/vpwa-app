@@ -316,7 +316,7 @@ const slashCommands = [
     },
     {
         name: 'join',
-        description: 'Join a channel or create a new channel if it does not exist. Usage: /join channelName [public|private]',
+        description: 'Join a public channel/channel you\'re invited to, or create a new channel if it does not exist. Usage: /join channelName [public|private]',
         icon: 'add_circle',
         run: (args) => {
             if (!args || args.length === 0) {
@@ -348,7 +348,7 @@ const slashCommands = [
     },
     {
         name: 'quit',
-        description: 'Delete the current channel (if admin)',
+        description: 'Delete the current channel (admin only).',
         icon: 'group',
         run: async () => {
             await deleteChannel(channelMeta.value); // wait for deletion to finish
@@ -358,13 +358,13 @@ const slashCommands = [
     },
     {
         name: 'cancel',
-        description: 'Používateľ môže zrušiť členstvo príkazom (ak admin, kanál zanikne)',
+        description: 'Leave the channel (if admin then channel dies)',
         icon: 'group',
         run: () => leaveChannel(channelMeta.value)
     },
    {
         name: 'invite',
-        description: 'Invite users to the current channel',
+        description: 'Invite users to the current channel. Usage: /invite nickname',
         icon: 'group',
         run: (args) => {
             if (!args || args.length === 0) {
@@ -410,12 +410,12 @@ const slashCommands = [
 
     {
         name: 'kick',
-        description: 'Odstrániť používateľa z kanála natrvalo (možno nový field v DB)',
+        description: 'vote to kick user (3 votes required). If admin, user is kicked immediately. Usage: /kick nickname',
         icon: 'group',
          run: (args) => {
             if (!args || args.length === 0) {
                 $q.notify({
-                    message: 'Please provide a user nickname. Usage: /invite nickname',
+                    message: 'Please provide a user nickname. Usage: /kick nickname',
                     color: 'warning',
                     icon: 'warning',
                 });
@@ -454,12 +454,12 @@ const slashCommands = [
     },
     {
         name: 'revoke',
-        description: 'Revoke a user from the current channel',
+        description: 'Kick user from private channel (admin only). Usage: /revoke nickname',
         icon: 'group',
         run: (args) => {
             if (!args || args.length === 0) {
                 $q.notify({
-                    message: 'Please provide a user nickname. Usage: /invite nickname',
+                    message: 'Please provide a user nickname. Usage: /revoke nickname',
                     color: 'warning',
                     icon: 'warning',
                 });
