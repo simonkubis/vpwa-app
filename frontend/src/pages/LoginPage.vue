@@ -213,7 +213,7 @@ async function onSubmit () {
     }
   } catch (err) {
     formError.value = humanizeError(err)
-    $q.notify({ type: 'negative', message: formError.value, position: 'top-right', timeout: 2500 })
+    $q.notify({ type: 'negative', message: formError.value, icon: 'error' })
   } finally {
     isSubmitting.value = false
   }
@@ -239,7 +239,20 @@ async function doLogin() {
     router.push('/')
   } catch (err) {
     console.error('Login failed', err)
-    // optionally show error message in UI
+
+    const backendError =
+      err?.data?.error ||
+      err?.data?.message ||
+      (Array.isArray(err?.data?.errors) && err.data.errors[0]?.message)
+
+    const message = backendError || 'Login failed. Please check your credentials.'
+
+    $q.notify({
+      message,
+      color: 'negative',
+      icon: 'error',
+    })
+    
   }
 }
 

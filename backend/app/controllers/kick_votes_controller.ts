@@ -13,13 +13,13 @@ export default class KickVotesController {
         // Convert channelId to number
         const numericChannelId = Number(channelId)
         if (isNaN(numericChannelId)) {
-            return response.badRequest({ error: 'Invalid channelId' })
+            return response.badRequest({ error: `Could not kick ${nickname}: Invalid channelId` })
         }
 
         // Lookup the target user by nickname
         const targetUser = await User.query().where('nickname', nickname).first()
         if (!targetUser) {
-            return response.notFound({ error: 'User not found' })
+            return response.notFound({ error: `Could not kick ${nickname}: User not found` })
         }
 
         const userId = targetUser.id
@@ -36,6 +36,23 @@ export default class KickVotesController {
 
         const isAdminKick = kickerMember.isAdmin
         console.log(`User ${kicker.nickname} (ID: ${kicker.id}) is attempting to kick ${nickname} (ID: ${userId}) from channel ID ${numericChannelId}. Admin kick: ${isAdminKick}`)
+        
+        const targetMembership = await ChannelMember.query()
+            .where('user_id', userId)
+            .andWhere('channel_id', numericChannelId)
+            .first()
+
+        if (!targetMembership) {
+            return response.badRequest({
+                error: `Could not kick ${nickname}: User is not a member of this channel`,
+            })
+        }
+
+        if (targetMembership.isBanned) {
+            return response.badRequest({
+                error: `Could not kick ${nickname}: User is already banned from this channel`,
+            })
+        }
 
         // Check if the kicker already voted to kick this user
         const existingVote = await KickVote.query()
@@ -45,7 +62,7 @@ export default class KickVotesController {
             .first()
 
         if (existingVote && isAdminKick === false) {
-            return response.badRequest({ message: 'You have already kicked this user.' })
+            return response.badRequest({ message: `Could not vote for ${nickname}: You've already voted` });
         }
 
         // Add new kick vote
@@ -73,15 +90,14 @@ export default class KickVotesController {
 
         const channelMembers = await ChannelMember.query().select('user_id');
 
+        let banned = false;
 
         if (member) {
             if (isAdminKick || kickCount >= 3) {
                 // Admin kick or 3+ votes -> permanent ban
                 member.isBanned = true
                 await member.save()
-            } else {
-                // Just remove from channel
-                await member.delete()
+                banned = true;
             }
         }
 
@@ -91,8 +107,12 @@ export default class KickVotesController {
             transmit.broadcast(`user/${member.userId}`, payload);
         }
 
+        const message = banned
+        ? `User "${nickname}" has been kicked and banned from this channel.`
+        : `Kick vote registered for "${nickname}" (${kickCount}/3).`
+
         return response.ok({
-            message: 'Kick registered',
+            message: message,
             totalKicks: kickCount,
             banned: isAdminKick || kickCount >= 3,
         })

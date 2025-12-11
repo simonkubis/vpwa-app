@@ -19,8 +19,10 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import { useQuasar } from 'quasar'
 
 const emit = defineEmits(['channelCreated'])
+const $q = useQuasar()
 
 const channelName = ref('')
 const channelVisibility = ref('public')
@@ -68,7 +70,14 @@ async function createChannel() {
     emit('channelCreated')
 
     const channel = response.data.data
+    const message = response.data.message
 
+    $q.notify({
+      message,
+      color: 'positive',
+      icon: 'check',
+    })
+      
     console.log('Channel created successfully:', channel)
     // Optionally reset form fields
     channelName.value = ''
@@ -76,6 +85,16 @@ async function createChannel() {
     channelVisibility.value = 'public'
   } catch (error) {
     console.error('Failed to create channel:', error)
+      const backendError =
+      error?.response?.data?.error || error?.response?.data?.message
+
+      const message = backendError || `Failed to create channel`;
+
+      $q.notify({
+      message,
+      color: 'negative',
+      icon: 'error',
+    })
   }
 }
 </script>

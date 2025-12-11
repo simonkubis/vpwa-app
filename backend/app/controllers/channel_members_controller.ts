@@ -4,6 +4,7 @@ import Channel from '#models/channels'
 import { DateTime } from 'luxon'
 import transmit from '@adonisjs/transmit/services/main'
 import User from '#models/user'
+import KickVote from '#models/kick_votes'
 
 export default class ChannelMembersController {
   public async getUserChannels({ auth, response }: HttpContext) {
@@ -435,16 +436,7 @@ export default class ChannelMembersController {
       // 2. Find user by nickname
       const userToInvite = await User.query().where('nickname', nickname).first();
       if (!userToInvite) {
-        return response.notFound({ error: 'User with this nickname does not exist' });
-      }
-
-      const userToInviteMembership = await ChannelMember.query()
-        .where('user_id', userToInvite.id)
-        .andWhere('channel_id', channel.id)
-        .first()
-
-      if (userToInviteMembership?.isBanned) {
-        return response.forbidden({ error: 'User is banned from this channel' })
+        return response.notFound({ error: `User "${nickname}" does not exist` });
       }
 
       // Cannot invite yourself
@@ -452,13 +444,14 @@ export default class ChannelMembersController {
         return response.badRequest({ error: 'You cannot invite yourself' });
       }
 
-      // 3. Private channel → only admins can invite
-      if (channel.visibility === 'private') {
-        const inviterMembership = await ChannelMember.query()
-          .where('user_id', inviter.id)
-          .andWhere('channel_id', channel.id)
-          .first();
+      // 3. Inviter membership
+      const inviterMembership = await ChannelMember.query()
+        .where('user_id', inviter.id)
+        .andWhere('channel_id', channel.id)
+        .first()
 
+      // Private channel only admins can invite
+      if (channel.visibility === 'private') {
         if (!inviterMembership || !inviterMembership.isAdmin) {
           return response.unauthorized({
             error: 'Only admins can invite users to private channels',
@@ -470,14 +463,45 @@ export default class ChannelMembersController {
       const existingMembership = await ChannelMember.query()
         .where('user_id', userToInvite.id)
         .andWhere('channel_id', channel.id)
-        .first();
+        .first()
+
+      // --- BANNED CASE ---
+      if (existingMembership?.isBanned) {
+        const inviterIsAdmin = inviterMembership?.isAdmin === true
+
+        if (!inviterIsAdmin) {
+          return response.forbidden({ error: `"User ${nickname}" is banned from this channel` })
+        }
+
+        
+        existingMembership.isBanned = false;
+        existingMembership.isInvited = true;
+        existingMembership.leftAt = null;
+        await existingMembership.save();
+
+        await KickVote.query()
+        .where('user_id', userToInvite.id)
+        .andWhere('channel_id', channel.id)
+        .delete()
+
+        const payload = { event: 'refresh', userId: inviter.id }
+        const channelMembers = await ChannelMember.query().select('user_id');
+        for (const member of channelMembers) {
+          transmit.broadcast(`user/${member.userId}`, payload)
+        }
+
+        return response.ok({
+          message: `User ${nickname} has been unbanned and invited again`,
+          data: existingMembership,
+        });
+      }
 
       if (existingMembership) {
         if (existingMembership.isInvited) {
-          return response.badRequest({ error: 'User has already been invited' });
+          return response.badRequest({ error: `User "${nickname}" has already been invited` });
         }
 
-        return response.badRequest({ error: 'User is already a member of this channel' });
+        return response.badRequest({ error: `User "${nickname}" is already a member of this channel` });
       }
 
       // 5. Create invitation
@@ -496,7 +520,7 @@ export default class ChannelMembersController {
       }
 
       return response.created({
-        message: `User ${nickname} invited successfully`,
+        message: `User "${nickname}" invited successfully`,
         data: invite,
       });
 

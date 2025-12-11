@@ -81,7 +81,7 @@ export default class AuthController {
       return { token: token.value!.release(), user: toPublicUser(user) }
     } catch (error) {
       if (error instanceof authErrors.E_INVALID_CREDENTIALS) {
-        return response.unauthorized({ errors: [{ message: 'Invalid credentials' }] })
+        return response.unauthorized({message: 'Login failded. Invalid credentials.' })
       }
       throw error
     }

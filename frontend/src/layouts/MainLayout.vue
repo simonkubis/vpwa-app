@@ -134,28 +134,26 @@ async function declineInvite(invite) {
 }
 
 async function revokeUser(channel, userNickname) {
-  try {
-    const channelId = channel.channel_id || channel.id
-    console.log(`Revoking user ${userNickname} from channel:`, channelId)
 
-    await axios.post(
-      `${API_URL}/channels/revoke`,
-      {
-        channelId,
-        nickname: userNickname,
+  const channelId = channel.channel_id || channel.id
+  console.log(`Revoking user ${userNickname} from channel:`, channelId)
+
+  await axios.post(
+    `${API_URL}/channels/revoke`,
+    {
+      channelId,
+      nickname: userNickname,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
-        },
-      }
-    )
+    }
+  )
 
-    await loadChannels()
-    console.log(`User ${userNickname} successfully revoked from channel ${channelId}`)
-  } catch (error) {
-    console.error(`Failed to revoke user ${userNickname} from channel:`, error)
-  }
+  await loadChannels()
+  console.log(`User ${userNickname} successfully revoked from channel ${channelId}`)
+  
 }
 
 
@@ -200,67 +198,57 @@ async function deleteChannel(channel) {
 }
 
 async function kickUser(channel, userNickname) {
-  try {
-    const response = await axios.post(
-      `${API_URL}/kicks`,
-      {
-        channelId: channel.channel_id || channel.id,
-        nickname: userNickname, // send nickname instead of userId
+
+  const response = await axios.post(
+    `${API_URL}/kicks`,
+    {
+      channelId: channel.channel_id || channel.id,
+      nickname: userNickname, // send nickname instead of userId
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
-        },
-      }
-    );
-
-    const data = response.data;
-    const message = response.data.message;
-
-    console.log(message, data);
-
-    // Optional: refresh channels or members list after kick
-    await loadChannels(); // or loadChannelMembers(channelId)
-
-    return data;
-  } catch (error) {
-    if (error.response) {
-      console.error('Kick failed:', error.response.data);
-      alert(error.response.data.error || error.response.data.message);
-    } else {
-      console.error('Kick failed:', error);
-      alert('Failed to kick user. Please try again.');
     }
-  }
+  );
+
+  const data = response.data;
+  const message = response.data.message;
+
+  console.log(message, data);
+
+  // Optional: refresh channels or members list after kick
+  await loadChannels(); // or loadChannelMembers(channelId)
+
+  return data;
+  
 }
 
 async function inviteToChannel(channelId, userNickname) {
-  try {
-    const response = await axios.post(
-      `${API_URL}/channels/invite`,
-      {
-        channelId: channelId,
-        nickname: userNickname,
+  
+  const response = await axios.post(
+    `${API_URL}/channels/invite`,
+    {
+      channelId: channelId,
+      nickname: userNickname,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
-        },
-      }
-    );
+    }
+  );
 
-    const data = response.data.data;
-    const message = response.data.message;
+  const data = response.data.data;
+  const message = response.data.message;
 
-    console.log(message, data);
+  console.log(message, data);
 
-    // Refresh channels list after inviting
-    await loadChannels();
+  // Refresh channels list after inviting
+  await loadChannels();
 
-    return data;
-  } catch (error) {
-    console.error('Failed to invite user to channel:', error);
-  }
+  return response.data;
+  
 }
 
 

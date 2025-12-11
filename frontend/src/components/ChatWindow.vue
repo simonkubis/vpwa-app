@@ -388,23 +388,27 @@ const slashCommands = [
             const nickname = args[0];
             const currentChannelId = channelMeta.value.id;
 
-            // Call the injected function with channelId and nickname
             inviteToChannel(currentChannelId, nickname)
-                .then((data) => {
-                    $q.notify({
-                        message: `User "${nickname}" has been invited successfully!`,
-                        color: 'positive',
-                        icon: 'check',
-                    });
-                    console.log(data)
+            .then((data) => {
+                const message = data?.message || "success"
+                $q.notify({
+                message,
+                color: 'positive',
+                icon: 'check',
                 })
-                .catch((err) => {
-                    $q.notify({
-                        message: err?.error || `Failed to invite user "${nickname}"`,
-                        color: 'negative',
-                        icon: 'error',
-                    });
-                });
+            })
+            .catch((error) => {
+                const backendError =
+                error?.response?.data?.error || error?.response?.data?.message
+
+                const message = backendError || `Failed to invite user "${nickname}"`;
+
+                $q.notify({
+                message,
+                color: 'negative',
+                icon: 'error',
+                })
+            })
         }
     },
 
@@ -433,23 +437,27 @@ const slashCommands = [
 
             const nickname = args[0];
 
-            // Call the injected function with channelId and nickname
             kickUser(channelMeta.value, nickname)
                 .then((data) => {
+                    const message = data?.message || "success"
                     $q.notify({
-                        message: `User "${nickname}" has been kicked successfully!`,
-                        color: 'positive',
-                        icon: 'check',
-                    });
-                    console.log(data)
+                    message,
+                    color: data?.banned ? 'positive' : 'info',
+                    icon: data?.banned ? 'check' : 'how_to_vote',
+                    })
                 })
-                .catch((err) => {
+                .catch((error) => {
+                    const backendError =
+                    error?.response?.data?.error || error?.response?.data?.message
+
+                    const message = backendError || `Failed to kick user "${nickname}"`;
+
                     $q.notify({
-                        message: err?.error || `Failed to kick user "${nickname}"`,
-                        color: 'negative',
-                        icon: 'error',
-                    });
-                });
+                    message,
+                    color: 'negative',
+                    icon: 'error',
+                    })
+                })
         }
     },
     {
@@ -487,12 +495,16 @@ const slashCommands = [
                     });
                     console.log(data)
                 })
-                .catch((err) => {
+                .catch((error) => {
+                    const backendError = error?.response?.data?.error
+                    const message =
+                    backendError || `Failed to revoke user "${nickname}"`
+
                     $q.notify({
-                        message: err?.error || `Failed to revoke user "${nickname}"`,
-                        color: 'negative',
-                        icon: 'error',
-                    });
+                    message,
+                    color: 'negative',
+                    icon: 'error',
+                    })
                 });
         }
     }

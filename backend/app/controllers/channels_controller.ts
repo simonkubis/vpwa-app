@@ -35,9 +35,7 @@ export default class ChannelsController {
         .first()
 
       if (existingChannel) {
-        return response.status(409).json({
-          error: 'Channel name already exists',
-        })
+        return response.badRequest({ error: `Channel "${name}" already exists` });
       }
 
       // 1. create channel
@@ -77,7 +75,10 @@ export default class ChannelsController {
         transmit.broadcast(`user/${member.userId}`, payload)
       }
 
-      return response.created({ data: channel })
+      return response.created({
+        message: `Channel "${name}" successfully created`,
+        data: channel,
+      })
     } catch (err) {
       console.error('Failed to create channel:', err)
       return response.internalServerError({ error: 'Failed to create channel' })
