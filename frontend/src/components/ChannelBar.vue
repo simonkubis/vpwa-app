@@ -41,11 +41,6 @@
               <q-item-section>View channel details</q-item-section>
             </q-item>
 
-            <q-item clickable v-ripple @click="onEditNotifications">
-              <q-item-section avatar><q-icon name="notifications" /></q-item-section>
-              <q-item-section>Edit notifications</q-item-section>
-            </q-item>
-
             <q-separator color="grey-7" />
 
             <q-item clickable v-ripple @click="onTogglePin">
@@ -189,10 +184,6 @@ function defaultAvatar(index) {
 // Actions
 function onViewDetails() {
   detailsOpen.value = true
-}
-
-function onEditNotifications() {
-  console.log(`Editing notifications for channel #${channelName.value}`)
 }
 
 async function onTogglePin() {
