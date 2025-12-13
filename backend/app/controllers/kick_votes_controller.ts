@@ -10,13 +10,11 @@ export default class KickVotesController {
         const kicker = await auth.getUserOrFail()
         const { channelId, nickname } = request.only(['nickname', 'channelId'])
 
-        // Convert channelId to number
         const numericChannelId = Number(channelId)
         if (isNaN(numericChannelId)) {
             return response.badRequest({ error: `Could not kick ${nickname}: Invalid channelId` })
         }
 
-        // Lookup the target user by nickname
         const targetUser = await User.query().where('nickname', nickname).first()
         if (!targetUser) {
             return response.notFound({ error: `Could not kick ${nickname}: User not found` })
@@ -24,7 +22,6 @@ export default class KickVotesController {
 
         const userId = targetUser.id
 
-        // Get the kicker's channel membership
         const kickerMember = await ChannelMember.query()
             .where('user_id', kicker.id)
             .andWhere('channel_id', numericChannelId)
@@ -54,7 +51,6 @@ export default class KickVotesController {
             })
         }
 
-        // Check if the kicker already voted to kick this user
         const existingVote = await KickVote.query()
             .where('user_id', userId)
             .andWhere('channel_id', numericChannelId)
@@ -65,14 +61,12 @@ export default class KickVotesController {
             return response.badRequest({ message: `Could not vote for ${nickname}: You've already voted` });
         }
 
-        // Add new kick vote
         await KickVote.create({
             userId,
             channelId: numericChannelId,
             kickerId: kicker.id,
         })
 
-        // Count total kicks for this user in this channel
         const totalKicks = await KickVote.query()
             .where('user_id', userId)
             .andWhere('channel_id', numericChannelId)
@@ -81,7 +75,6 @@ export default class KickVotesController {
 
         const kickCount = totalKicks ? Number(totalKicks.$extras.count) : 0
 
-        // Remove the user from channel_members
         const member = await ChannelMember.query()
             .where('user_id', userId)
             .andWhere('channel_id', numericChannelId)
@@ -94,14 +87,12 @@ export default class KickVotesController {
 
         if (member) {
             if (isAdminKick || kickCount >= 3) {
-                // Admin kick or 3+ votes -> permanent ban
                 member.isBanned = true
                 await member.save()
                 banned = true;
             }
         }
 
-        // 6. Broadcast refresh
         const payload = { event: 'refresh', userId: null };
         for (const member of channelMembers) {
             transmit.broadcast(`user/${member.userId}`, payload);

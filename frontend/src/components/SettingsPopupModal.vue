@@ -6,13 +6,11 @@
       </q-card-section>
 
       <q-card-section>
-        <!-- Status selection -->
         <div class="q-mb-md">
           <q-select v-model="status" :options="statusOptions" option-value="value" option-label="label" emit-value
             map-options label="Status" color="teal-7" filled dense dark />
         </div>
 
-        <!-- Notification preference -->
         <div class="q-mb-md">
           <q-select v-model="notifPref" :options="notifOptions" option-value="value" option-label="label" emit-value
             map-options label="Notifications" color="teal-7" filled dense dark />
@@ -81,7 +79,6 @@ async function uploadSettings(newSettings) {
   }
 }
 
-// --- Dialog controls ---
 function open() {
   isOpen.value = true
   loadSettings()
@@ -91,14 +88,12 @@ function close() {
   isOpen.value = false
 }
 
-// --- Load saved settings ---
 async function loadSettings() {
   const settings = await fetchSettings()
   status.value = settings.status
   notifPref.value = settings.notifPref
 }
 
-// --- Save settings ---
 async function saveAndClose() {
   const newSettings = {
     status: status.value,

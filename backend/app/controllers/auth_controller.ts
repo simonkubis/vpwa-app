@@ -15,7 +15,7 @@ const registerValidator = vine.compile(
 
 const loginValidator = vine.compile(
   vine.object({
-    username: vine.string().trim(),   //nick alebo email
+    username: vine.string().trim(),   
     password: vine.string(),
   })
 )
@@ -64,7 +64,6 @@ export default class AuthController {
 
     const token = await auth.use('api').createToken(user)
 
-    // IMPORTANT: same shape as login()
     return response.created({
       token: token.value!.release(),
       user: toPublicUser(user)

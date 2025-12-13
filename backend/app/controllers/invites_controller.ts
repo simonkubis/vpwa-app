@@ -4,7 +4,6 @@ import Invite from '#models/invites'
 export default class InvitesController {
   public async me({ auth, response }: HttpContext) {
     try {
-      // Fetch invites using Lucid
       const invites = await Invite.query()
         .where('userId', auth.getUserOrFail().id)
 
@@ -17,7 +16,7 @@ export default class InvitesController {
 
   public async create({ request, auth, response }: HttpContext) {
     try {
-      await auth.getUserOrFail(); // Removed unused variable 'user'
+      await auth.getUserOrFail(); 
       const { channelId, invitedUsers } = request.only(['channelId', 'invitedUsers']);
 
       if (!Array.isArray(invitedUsers) || !channelId) {

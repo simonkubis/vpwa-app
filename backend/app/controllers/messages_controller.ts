@@ -38,7 +38,6 @@ public async createMessage({ request, auth, response }: HttpContext) {
       'createdAt'
     ]);
 
-    // Create the message
     const message = await Message.create({
       userId: user.id,
       channelId,
@@ -48,16 +47,14 @@ public async createMessage({ request, auth, response }: HttpContext) {
 
     const serializedMessage = message.serialize();
 
-    // Fetch the channel info (including name)
       const channel = await Channel.query()
           .where('id', channelId)
           .firstOrFail();
 
-      // Prepare payload with channel name included
       const payload = {
           event: 'new-message',
           channelId,
-          channelName: channel.name, // <-- add this
+          channelName: channel.name, 
           message: {
               id: serializedMessage.id,
               body: serializedMessage.body,
@@ -68,12 +65,10 @@ public async createMessage({ request, auth, response }: HttpContext) {
           }
       };
 
-    // Fetch all members of the channel
     const channelMembers = await ChannelMember.query()
       .where('channel_id', channelId)
       .select('user_id');
 
-    // Broadcast to each member's single subscription
     for (const member of channelMembers) {
       transmit.broadcast(`user/${member.userId}`, payload);
     }

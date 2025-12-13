@@ -15,7 +15,7 @@ export default class ChannelMembersController {
         .join('channel_members', 'channels.id', 'channel_members.channel_id')
         .where('channel_members.user_id', user.id)
         .andWhere('channel_members.is_banned', false)
-        .select('channels.*', 'channel_members.*'); // Include all channel_members columns
+        .select('channels.*', 'channel_members.*'); 
 
       console.log('Fetched channels for user:', channels);
 
@@ -35,18 +35,15 @@ export default class ChannelMembersController {
         return response.badRequest({ error: 'Missing channelId or nickname' })
       }
 
-      // Fetch the channel
       const channel = await Channel.find(channelId)
       if (!channel) {
         return response.notFound({ error: 'Channel not found' })
       }
 
-      // Only allow revoke in private channels
       if (channel.visibility !== 'private') {
         return response.unauthorized({ error: 'Revoke can only be used in private channels' })
       }
 
-      // Only admins can revoke
       const adminMembership = await ChannelMember.query()
         .where('user_id', adminUser.id)
         .andWhere('channel_id', channelId)
@@ -56,13 +53,11 @@ export default class ChannelMembersController {
         return response.unauthorized({ error: 'Only admins can revoke users in private channels' })
       }
 
-      // Find the target user by nickname
       const targetUser = await User.query().where('nickname', nickname).first()
       if (!targetUser) {
         return response.notFound({ error: 'User with this nickname does not exist' })
       }
 
-      // Check if the target user is a member
       const membership = await ChannelMember.query()
         .where('user_id', targetUser.id)
         .andWhere('channel_id', channelId)
@@ -72,15 +67,12 @@ export default class ChannelMembersController {
         return response.notFound({ error: 'User is not a member of this channel' })
       }
 
-      // Fetch all members BEFORE deleting the target membership
       const channelMembers = await ChannelMember.query()
         .where('channel_id', channelId)
         .select('user_id')
 
-      // Delete the target membership
       await membership.delete()
 
-      // Broadcast refresh to all previous members (including the revoked user)
       const payload = { event: 'refresh', userId: null }
       for (const member of channelMembers) {
         transmit.broadcast(`user/${member.userId}`, payload)
@@ -104,7 +96,6 @@ export default class ChannelMembersController {
         return response.badRequest({ error: 'Missing name or visibility' });
       }
 
-      // Check if channel exists
       let channel = await Channel.query().where('name', name).first();
 
       
@@ -122,14 +113,12 @@ export default class ChannelMembersController {
         }
 
         if (channel.visibility === 'public') {
-          // Check if membership exists
           const existingMembership = await ChannelMember.query()
             .where({ userId: user.id, channelId: channel.id })
             .first();
 
           if (existingMembership) {
             if (existingMembership.isInvited) {
-              // User was invited, now joining
               existingMembership.isInvited = false;
               existingMembership.joinedAt = DateTime.local();
               await existingMembership.save();
@@ -158,7 +147,6 @@ export default class ChannelMembersController {
             });
           }
 
-          // User not a member, create membership
           const newMembership = await ChannelMember.create({
             userId: user.id,
             channelId: channel.id,
@@ -182,7 +170,6 @@ export default class ChannelMembersController {
         return response.badRequest({ error: 'Cannot join a private channel without invitation' });
       }
 
-      // Create new channel if it does not exist
       channel = await Channel.create({
         name,
         visibility,
@@ -190,7 +177,6 @@ export default class ChannelMembersController {
         createdAt: DateTime.local(),
       });
 
-      // Creator automatically becomes admin
       const membership = await ChannelMember.create({
         userId: user.id,
         channelId: channel.id,
@@ -224,13 +210,11 @@ export default class ChannelMembersController {
       const user = await auth.getUserOrFail()
       const { channelId } = request.only(['channelId'])
 
-      // Check that the channel exists
       const channel = await Channel.find(channelId)
       if (!channel) {
         return response.notFound({ error: 'Channel not found' })
       }
 
-      // Check if user is admin of this channel
       const membership = await ChannelMember.query()
         .where('user_id', user.id)
         .andWhere('channel_id', channelId)
@@ -241,20 +225,16 @@ export default class ChannelMembersController {
       }
 
 
-      // 1) Fetch all members of the channel
       const channelMembers = await ChannelMember.query()
         .where('channel_id', channelId)
         .select('user_id');
 
-      // 2) Delete all channel_members rows
       await ChannelMember.query()
         .where('channel_id', channelId)
         .delete();
 
-      // 3) Delete the channel itself
       await channel.delete();
 
-      // 4) Broadcast refresh to all members
       const payload = { event: 'refresh', userId: '' };
       for (const member of channelMembers) {
         transmit.broadcast(`user/${member.userId}`, payload);
@@ -284,7 +264,6 @@ export default class ChannelMembersController {
         return response.notFound({ error: 'Channel membership not found' })
       }
 
-      // Fetch all members before deletion for broadcasting
       const channelMembers = await ChannelMember.query()
         .where('channel_id', channelId)
         .select('user_id')
@@ -292,15 +271,12 @@ export default class ChannelMembersController {
       const payload = { event: 'refresh', userId: '' }
 
       if (membership.isAdmin) {
-        // Broadcast refresh to all members before deletion
         for (const member of channelMembers) {
           transmit.broadcast(`user/${member.userId}`, payload)
         }
 
-        // Delete all membership rows
         await ChannelMember.query().where('channel_id', channelId).delete()
 
-        // Delete the channel itself
         const channel = await Channel.find(channelId)
         if (channel) {
           await channel.delete()
@@ -311,7 +287,6 @@ export default class ChannelMembersController {
         })
       }
 
-      // Normal user → broadcast first, then delete only their membership
       for (const member of channelMembers) {
         transmit.broadcast(`user/${member.userId}`, payload)
       }
@@ -340,7 +315,6 @@ export default class ChannelMembersController {
         return response.notFound({ error: 'Channel membership not found' })
       }
 
-      // Delete the membership row
       await membership.delete()
 
       const payload = { event: 'refresh', userId: user.id };
@@ -359,9 +333,8 @@ export default class ChannelMembersController {
   public async getChannelById({ request, auth, response }: HttpContext) {
     try {
       const user = await auth.getUserOrFail()
-      const { channelId } = request.params() // from /channel/:id
+      const { channelId } = request.params() 
 
-      // Fetch channel
       const channel = await Channel.query()
         .where('id', channelId)
         .first()
@@ -370,13 +343,11 @@ export default class ChannelMembersController {
         return response.notFound({ error: 'Channel not found' })
       }
 
-      // Fetch membership for current user
       const membership = await ChannelMember.query()
         .where('channel_id', channelId)
         .andWhere('user_id', user.id)
         .first()
 
-      // Fetch all members of the channel with their user names
       const members = await ChannelMember.query()
         .where('channel_id', channelId)
         .join('users', 'channel_members.user_id', 'users.id')
@@ -392,7 +363,6 @@ export default class ChannelMembersController {
           'channel_members.is_invited'
         )
 
-      // Fetch owner name
       const owner = await ChannelMember.query()
         .where('channel_id', channelId)
         .join('users', 'channel_members.user_id', 'users.id')
@@ -427,30 +397,25 @@ export default class ChannelMembersController {
         return response.badRequest({ error: 'Missing channelId or nickname' });
       }
 
-      // 1. Fetch channel
       const channel = await Channel.find(channelId);
       if (!channel) {
         return response.notFound({ error: 'Channel not found' });
       }
 
-      // 2. Find user by nickname
       const userToInvite = await User.query().where('nickname', nickname).first();
       if (!userToInvite) {
         return response.notFound({ error: `User "${nickname}" does not exist` });
       }
 
-      // Cannot invite yourself
       if (userToInvite.id === inviter.id) {
         return response.badRequest({ error: 'You cannot invite yourself' });
       }
 
-      // 3. Inviter membership
       const inviterMembership = await ChannelMember.query()
         .where('user_id', inviter.id)
         .andWhere('channel_id', channel.id)
         .first()
 
-      // Private channel only admins can invite
       if (channel.visibility === 'private') {
         if (!inviterMembership || !inviterMembership.isAdmin) {
           return response.unauthorized({
@@ -459,13 +424,11 @@ export default class ChannelMembersController {
         }
       }
 
-      // 4. Check if already a member or invited
       const existingMembership = await ChannelMember.query()
         .where('user_id', userToInvite.id)
         .andWhere('channel_id', channel.id)
         .first()
 
-      // --- BANNED CASE ---
       if (existingMembership?.isBanned) {
         const inviterIsAdmin = inviterMembership?.isAdmin === true
 
@@ -504,7 +467,6 @@ export default class ChannelMembersController {
         return response.badRequest({ error: `User "${nickname}" is already a member of this channel` });
       }
 
-      // 5. Create invitation
       const invite = await ChannelMember.create({
         userId: userToInvite.id,
         channelId: channel.id,
@@ -512,7 +474,6 @@ export default class ChannelMembersController {
         isAdmin: false,
       });
 
-      // 6. Broadcast refresh
       const payload = { event: 'refresh', userId: inviter.id };
       const channelMembers = await ChannelMember.query().select('user_id');
       for (const member of channelMembers) {
@@ -538,7 +499,6 @@ export default class ChannelMembersController {
       const user = await auth.getUserOrFail()
       const { channelId, isPinned } = request.only(['channelId', 'isPinned'])
 
-      // Validate boolean
       if (typeof isPinned !== 'boolean') {
         return response.badRequest({ error: '`isPinned` must be a boolean' })
       }
@@ -580,7 +540,6 @@ export default class ChannelMembersController {
         return response.badRequest({ error: 'User has already accepted the invite' })
       }
 
-      // Update the membership
       membership.isInvited = false
       membership.joinedAt = DateTime.local()
       await membership.save()

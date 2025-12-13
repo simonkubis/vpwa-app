@@ -1,11 +1,8 @@
 <template>
   <div class="row items-center justify-between bg-teal-5 text-white q-pa-sm rounded-borders">
-    <!-- Channel Name -->
     <div class="text-h6"># {{ channelName }}</div>
 
-    <!-- Actions: Members + Menu -->
     <div class="row items-center no-wrap">
-      <!-- Members button -->
       <q-btn
         flat
         class="q-px-sm members-btn bg-teal-6 q-mr-sm"
@@ -27,7 +24,6 @@
         </div>
       </q-btn>
 
-      <!-- More menu -->
       <q-btn flat round dense icon="more_vert" class="text-white">
         <q-menu
           class="menu-525 text-white"
@@ -85,7 +81,6 @@
       </q-card>
     </q-dialog>
 
-    <!-- Channel Details Dialog -->
     <q-dialog v-model="detailsOpen">
       <q-card class="dialog-525" style="width: 100%; max-width: 420px;">
         <q-card-section class="row items-center justify-between">
@@ -142,11 +137,9 @@ const API_URL = import.meta.env.VITE_API_URL
 const loadChannels = inject('loadChannels')
 
 
-// Dialogs
 const membersListOpen = ref(false)
 const detailsOpen = ref(false)
 
-// Pinned state
 const localPinned = ref(false);
 
 watch(
@@ -165,7 +158,6 @@ watch(
   { deep: true }
 );
 
-// Computed
 const channelName = computed(() => props.channelMeta?.name || 'Unnamed')
 const displayedMembers = computed(() => props.members.slice(0, 5))
 const formattedCreatedAt = computed(() =>
@@ -176,7 +168,6 @@ const formattedCreatedAt = computed(() =>
 
 
 
-// Default avatar for missing images
 function defaultAvatar(index) {
   return `https://i.pravatar.cc/150?img=${index + 1}`
 }

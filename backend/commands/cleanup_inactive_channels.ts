@@ -33,7 +33,6 @@ export default class CleanupInactiveChannels extends BaseCommand {
 
 }
 
-// DELETE ALL INACTIVE CHANNELS (NO NEW MESSAGES FOR 30 DAYS) DAILY AT MIDNIGHT
 cron.schedule('0 0 * * *', async () => {
   try {
     console.log('[Scheduler] Running inactive channels cleanup...')

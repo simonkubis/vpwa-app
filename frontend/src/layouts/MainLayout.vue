@@ -91,7 +91,6 @@ const publicChannelsList = ref([])
 const leftDrawerOpen = ref(false)
 
 
-// Placeholder functions
 async function acceptInvite(invite) {
   try {
     console.log('Accepting invite for channel:', invite.channel_id)
@@ -106,7 +105,6 @@ async function acceptInvite(invite) {
       }
     )
 
-    // Reload channels after accepting invite
     await loadChannels()
   } catch (error) {
     console.error('Failed to accept invite:', error)
@@ -122,11 +120,10 @@ async function declineInvite(invite) {
         Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
       },
       data: {
-        channelId: invite.channel_id, // DELETE with body
+        channelId: invite.channel_id, 
       },
     })
 
-    // Reload channels after declining invite
     await loadChannels()
   } catch (error) {
     console.error('Failed to decline invite:', error)
@@ -170,7 +167,6 @@ async function leaveChannel(channel) {
       },
     })
 
-    // Refresh lists after leaving
     await loadChannels()
   } catch (error) {
     console.error('Failed to leave channel:', error)
@@ -190,7 +186,6 @@ async function deleteChannel(channel) {
       },
     })
 
-    // Refresh after deletion
     await loadChannels()
   } catch (error) {
     console.error('Failed to delete channel:', error)
@@ -203,7 +198,7 @@ async function kickUser(channel, userNickname) {
     `${API_URL}/kicks`,
     {
       channelId: channel.channel_id || channel.id,
-      nickname: userNickname, // send nickname instead of userId
+      nickname: userNickname, 
     },
     {
       headers: {
@@ -217,8 +212,7 @@ async function kickUser(channel, userNickname) {
 
   console.log(message, data);
 
-  // Optional: refresh channels or members list after kick
-  await loadChannels(); // or loadChannelMembers(channelId)
+  await loadChannels(); 
 
   return data;
   
@@ -244,7 +238,6 @@ async function inviteToChannel(channelId, userNickname) {
 
   console.log(message, data);
 
-  // Refresh channels list after inviting
   await loadChannels();
 
   return response.data;
@@ -256,7 +249,6 @@ async function inviteToChannel(channelId, userNickname) {
 
 async function joinOrCreateChannel(channelName, visibility = 'public') {
   try {
-    // Send POST request to join or create the channel
     const response = await axios.post(
       `${API_URL}/channels/join-or-create`,
       {

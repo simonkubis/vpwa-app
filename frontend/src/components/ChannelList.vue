@@ -16,7 +16,6 @@
       </q-item-section>
 
       <template v-if="!invites">
-        <!-- If invited: Accept / Decline -->
         <template v-if="is_invited">
           <q-btn
             class="absolute-right"
@@ -91,7 +90,7 @@ const emit = defineEmits(['delete', 'leave', 'accept', 'decline'])
 
 const rightPadStyle = computed(() => {
   if (props.invites) return 'padding-right: 0;'
-  if (props.is_invited) return 'padding-right: 100px;' // two buttons for invites
+  if (props.is_invited) return 'padding-right: 100px;' 
   if (props.canDelete && props.canLeave) return 'padding-right: 100px;'
   if (props.canDelete || props.canLeave) return 'padding-right: 50px;'
   return 'padding-right: 0;'

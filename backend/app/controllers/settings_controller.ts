@@ -4,7 +4,6 @@ import ChannelMember from '#models/channel_members'
 
 
 export default class SettingsController {
-  // GET /settings
   public async getSettings({ auth, response }: HttpContext) {
     const user = await auth.getUserOrFail()
     return response.ok({
@@ -13,12 +12,10 @@ export default class SettingsController {
     })
   }
 
-  // POST /settings
   public async updateSettings({ auth, request, response }: HttpContext) {
     const user = await auth.getUserOrFail()
     const { status, notifPref } = request.only(['status', 'notifPref'])
 
-    // Direct update without validation
     user.status = status
     user.notifPref = notifPref
     await user.save()

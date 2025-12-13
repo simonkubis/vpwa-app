@@ -58,7 +58,7 @@ async function createChannel() {
         name: channelName.value,
         visibility: visibilityValue,
         description: '',
-        users, // Include users array in the request
+        users, 
       },
       {
         headers: {
@@ -79,7 +79,6 @@ async function createChannel() {
     })
       
     console.log('Channel created successfully:', channel)
-    // Optionally reset form fields
     channelName.value = ''
     invitedUsersText.value = ''
     channelVisibility.value = 'public'

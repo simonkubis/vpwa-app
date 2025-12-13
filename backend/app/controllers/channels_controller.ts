@@ -29,7 +29,6 @@ export default class ChannelsController {
 
       console.log('Creating channel with data:', { name, visibility, description, users })
 
-      // 🔎 CHECK IF CHANNEL NAME EXISTS (case-insensitive is optional)
       const existingChannel = await Channel.query()
         .whereRaw('LOWER(name) = ?', [name.toLowerCase()])
         .first()
@@ -38,7 +37,6 @@ export default class ChannelsController {
         return response.badRequest({ error: `Channel "${name}" already exists` });
       }
 
-      // 1. create channel
       const channel = await Channel.create({
         name,
         visibility,
@@ -46,14 +44,12 @@ export default class ChannelsController {
         ownerId: user.id,
       })
 
-      // 2. assign channel to creator as first member
       await ChannelMember.create({
         isAdmin: true,
         userId: user.id,
         channelId: channel.id,
       })
 
-      // 3. Add invited users to the channel
       if (users && Array.isArray(users)) {
         for (const username of users) {
           const invitedUser = await User.findBy('nickname', username)
@@ -68,7 +64,6 @@ export default class ChannelsController {
         }
       }
 
-      // Broadcast refresh to all users
       const payload = { event: 'refresh', userId: user.id }
       const channelMembers = await ChannelMember.query().select('user_id')
       for (const member of channelMembers) {

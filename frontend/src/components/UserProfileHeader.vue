@@ -55,7 +55,7 @@ async function loadInitialSettings() {
     status.value = res.data.status
   } catch (err) {
     console.error("Failed to load settings", err)
-    status.value = "online"   // fallback
+    status.value = "online"   
   }
 }
 
@@ -74,7 +74,6 @@ function onAuthChanged(e) {
 function handleSettingsChanged(newSettings) {
   status.value = newSettings.status
   console.log("Parent received settings:", newSettings)
-  // You can now update parent state, refresh UI, call API, etc.
 }
 
 const statusLabel = computed(() => {

@@ -1,11 +1,9 @@
 <template>
     <q-page class="flex column q-pa-md" style="height: calc(100vh - 50px);">
 
-        <!-- Channel bar -->
         <channel-bar v-if="!isOffline && isChannelRoute" ref="channelBarRef" :key="channelId"
             :channel-meta="channelMeta" :membership="membership" :members="members" />
 
-        <!-- Offline Banner -->
         <q-banner v-if="isOffline" class="bg-grey-8 text-white q-mb-md q-mt-md" rounded>
             <template v-slot:avatar>
                 <q-icon name="wifi_off" color="grey-4" />
@@ -13,11 +11,9 @@
             You are currently offline. Messages cannot be sent or received.
         </q-banner>
 
-        <!-- Conversation window -->
         <div ref="messagesContainer" class="messages-container q-pa-md q-mt-md rounded-borders"
             style="background-color: #393939;" @scroll="onScroll">
 
-            <!-- Loading indicator at top -->
             <div v-if="loading && hasMoreMessages" class="text-center q-py-md">
                 <q-spinner-dots color="teal-5" size="40px" />
                 <div class="text-caption text-grey-5 q-mt-xs">Loading older messages...</div>
@@ -65,7 +61,6 @@
                 </div>
             </q-card>
         </div>
-        <!-- Message input -->
         <div v-else>
             <div v-if="showTyping" class="text-caption text-grey-5 q-mb-none">
                 <span class="text-teal-4 cursor-pointer" title="Show draft" @mouseenter="hoverOpen"
@@ -93,7 +88,6 @@
                     </q-input>
                 </div>
 
-                <!-- slash command menu -->
                 <q-menu ref="slashMenuRef" v-model="slashMenuOpen" :target="inputAnchor" anchor="bottom left"
                     self="top left" :offset="[0, 8]" no-focus class="menu-525"
                     :content-style="{ width: 'min(560px, 96vw)', borderRadius: '10px', overflow: 'hidden' }">
@@ -144,8 +138,7 @@ const router = useRouter()
 
 const notificationPermission = ref(Notification.permission)
 
-// User status tracking
-const userStatus = ref('online') // online, offline, dnd
+const userStatus = ref('online') 
 const isOffline = computed(() => userStatus.value === 'offline')
 const isChannelRoute = computed(() =>
     route.path.startsWith('/channel/')
@@ -153,11 +146,8 @@ const isChannelRoute = computed(() =>
 
 
 
-// Load user settings including status
 async function loadInitialSettings() {
     try {
-
-
         const res = await axios.get(`${API_URL}/settings`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
@@ -166,11 +156,10 @@ async function loadInitialSettings() {
         userStatus.value = res.data.status
     } catch (err) {
         console.error("Failed to load settings", err)
-        userStatus.value = "online"   // fallback
+        userStatus.value = "online"   
     }
 }
 
-// poll every 500ms
 setInterval(loadInitialSettings, 500)
 
 
@@ -190,7 +179,6 @@ async function fetchSettings() {
 }
 
 
-// Request browser notification permission
 async function requestNotificationPermission() {
     if ('Notification' in window) {
         const permission = await Notification.requestPermission()
@@ -215,10 +203,8 @@ function isMentioned(messageBody) {
     return lowerBody.includes(`@${nickname.toLowerCase()}`)
 }
 
-// Show browser notification
 async function showBrowserNotification(payload) {
     try {
-        // Wait for settings to be fetched
         const settings = await fetchSettings()
 
         console.log(settings.notifPref, settings.status)
@@ -229,19 +215,16 @@ async function showBrowserNotification(payload) {
             return
         }
 
-        // Check if we should only show notifications for mentions
         if (settings.notifPref == 'mentions_only' && !isMentioned(payload.message.body)) {
             console.log('Skipping notification - not mentioned')
             return
         }
 
-        // Check if app is visible using Quasar App Visibility
         if ($q.appVisible) {
             console.log('App is visible, skipping notification')
             return
         }
 
-        // Check browser notification permission
         if (!('Notification' in window)) {
             console.log('Browser does not support notifications')
             return
@@ -252,25 +235,21 @@ async function showBrowserNotification(payload) {
             return
         }
 
-        // Create notification title
         const title = `${payload.message.user_nickname || 'Someone'} in #${payload.channelName}`
 
-        // Create notification body (truncate long messages)
         const maxLength = 100
         const body = payload.message.body.length > maxLength
             ? payload.message.body.substring(0, maxLength) + '...'
             : payload.message.body
 
-        // Show the notification
         const notification = new Notification(title, {
             body,
-            icon: '/favicon.ico', // Your app icon
-            tag: `channel-${payload.channelId}`, // Prevents duplicate notifications
+            icon: '/favicon.ico', 
+            tag: `channel-${payload.channelId}`, 
             requireInteraction: false,
             silent: false
         })
 
-        // Handle notification click - focus the app and navigate to channel
         notification.onclick = () => {
             window.focus()
             router.push({
@@ -281,7 +260,6 @@ async function showBrowserNotification(payload) {
             notification.close()
         }
 
-        // Auto-close after 5 seconds
         setTimeout(() => notification.close(), 5000)
 
     } catch (err) {
@@ -331,7 +309,6 @@ const slashCommands = [
             const channelName = args[0]
             const visibility = args[1]?.toLowerCase().replaceAll('[', '').replaceAll(']', '') // optional: 'public' or 'private'
 
-            // Validate visibility if provided
             if (visibility && !['public', 'private'].includes(visibility)) {
                 $q.notify({
                     message: 'Visibility must be either "public" or "private"',
@@ -341,8 +318,6 @@ const slashCommands = [
                 return
             }
 
-            // Call the injected function with channelName and optional visibility
-            // If visibility is not provided, it defaults to undefined and backend handles it
             joinOrCreateChannel(channelName, visibility)
         }
     },
@@ -351,8 +326,8 @@ const slashCommands = [
         description: 'Delete the current channel (admin only).',
         icon: 'group',
         run: async () => {
-            await deleteChannel(channelMeta.value); // wait for deletion to finish
-            checkChannelExists(); // now runs after deletion
+            await deleteChannel(channelMeta.value); 
+            checkChannelExists(); 
             resetMessages();
         }
     },
@@ -485,7 +460,6 @@ const slashCommands = [
 
             const nickname = args[0];
 
-            // Call the injected function with channelId and nickname
             revokeUser(channelMeta.value, nickname)
                 .then((data) => {
                     $q.notify({
@@ -520,9 +494,9 @@ const messages = ref([])
 const messagesContainer = ref(null)
 const channelExists = ref(true)
 
-const typingUsers = ref(new Map()) // Map<userId, {nickname, text, timestamp}>
-const typingDebounceTime = 5000 // Stop showing "typing" after 1 second of inactivity
-const sendTypingThrottle = 100 // Only send typing events every 500ms
+const typingUsers = ref(new Map()) 
+const typingDebounceTime = 5000 
+const sendTypingThrottle = 100 
 let lastTypingSent = 0
 let typingTimeoutId = null
 
@@ -534,10 +508,8 @@ let isScrollingProgrammatically = false
 const API_URL = import.meta.env.VITE_API_URL
 const currentUser = JSON.parse(localStorage.getItem('auth.user'))
 
-// Computed property for displaying typing indicator
 const activeTypingUser = computed(() => {
     const now = Date.now()
-    // Filter out stale typing indicators and current user
     const active = Array.from(typingUsers.value.entries())
         .filter(([userId, data]) => {
             return userId !== currentUser.id &&
@@ -546,7 +518,6 @@ const activeTypingUser = computed(() => {
 
     if (active.length === 0) return null
 
-    // Show first active typing user
     const [userId, data] = active[0]
     return {
         userId,
@@ -559,7 +530,6 @@ const showTyping = computed(() => activeTypingUser.value !== null)
 const typingName = computed(() => activeTypingUser.value?.nickname || '')
 const typingPreview = computed(() => activeTypingUser.value?.text || '')
 
-// Clean up stale typing indicators periodically
 setInterval(() => {
     const now = Date.now()
     typingUsers.value.forEach((data, userId) => {
@@ -569,14 +539,11 @@ setInterval(() => {
     })
 }, 500)
 
-// Send typing indicator to backend (throttled)
 async function sendTypingIndicator() {
-    // Don't send typing indicators if offline
     if (isOffline.value) return
 
     const now = Date.now()
 
-    // Throttle: only send if enough time has passed
     if (now - lastTypingSent < sendTypingThrottle) {
         return
     }
@@ -588,7 +555,7 @@ async function sendTypingIndicator() {
             `${API_URL}/typing`,
             {
                 channelId: channelId.value,
-                text: newMessage.value.substring(0, 200) // Send truncated text for preview
+                text: newMessage.value.substring(0, 200) 
             },
             {
                 headers: {
@@ -601,11 +568,9 @@ async function sendTypingIndicator() {
     }
 }
 
-// Stop typing indicator when user stops typing
 function stopTypingIndicator() {
     clearTimeout(typingTimeoutId)
     typingTimeoutId = setTimeout(async () => {
-        // Don't send stop typing if offline
         if (isOffline.value) return
 
         try {
@@ -613,7 +578,7 @@ function stopTypingIndicator() {
                 `${API_URL}/typing`,
                 {
                     channelId: channelId.value,
-                    text: '' // Empty text signals user stopped typing
+                    text: '' 
                 },
                 {
                     headers: {
@@ -627,21 +592,18 @@ function stopTypingIndicator() {
     }, typingDebounceTime)
 }
 
-// Update the onInputChange function
 function onInputChange(val) {
     const starts = val.trim().startsWith('/')
     if (starts !== slashMenuOpen.value) {
         slashMenuOpen.value = starts
     }
 
-    // Send typing indicator when user types (only if online)
     if (val.trim().length > 0 && !isOffline.value) {
         sendTypingIndicator()
         stopTypingIndicator()
     }
 }
 
-// Check if channel exists
 async function checkChannelExists() {
     if (!channelId.value) {
         console.log('[DEBUG] No channel_id, redirecting to /')
@@ -667,10 +629,9 @@ async function checkChannelExists() {
     }
 }
 
-const hasMoreMessages = ref(true) // Track if there are more messages to load
+const hasMoreMessages = ref(true) 
 
 async function fetchMessages() {
-    // Don't fetch messages if offline
     if (isOffline.value || isChannelRoute.value === false) {
         console.log('Skipping message fetch - user is offline')
         return
@@ -695,15 +656,12 @@ async function fetchMessages() {
         console.log('Fetched messages from backend:', fetchedMessages)
 
         if (Array.isArray(fetchedMessages)) {
-            // If we got fewer messages than pageSize, we've hit the top
             if (fetchedMessages.length < pageSize) {
                 hasMoreMessages.value = false
             }
 
-            // Convert backend order (newest→oldest) → frontend order (oldest→newest)
             const normalized = [...fetchedMessages].reverse()
 
-            // Prepend older messages at the top
             messages.value = [...normalized, ...messages.value]
             currentPage++
         }
@@ -713,7 +671,6 @@ async function fetchMessages() {
 }
 
 function loadOlderMessages() {
-    // Don't load older messages if offline, already loading, or no more messages
     if (loading || isOffline.value || !hasMoreMessages.value) return
 
     loading = true
@@ -724,7 +681,6 @@ function loadOlderMessages() {
     fetchMessages().then(() => {
         nextTick(() => {
             if (container) {
-                // Maintain scroll position after prepending old messages
                 isScrollingProgrammatically = true
                 container.scrollTop = container.scrollHeight - oldScrollHeight
                 setTimeout(() => { isScrollingProgrammatically = false }, 100)
@@ -777,19 +733,16 @@ function runSlashCommand(cmd) {
 }
 
 function onScroll() {
-    // Prevent lazy loading during programmatic scrolls
     if (isScrollingProgrammatically) return
 
     const container = messagesContainer.value
     if (!container) return
 
-    // Only load older messages when scrolled near the top (and online)
     if (container.scrollTop <= 50 && !loading && !isOffline.value) {
         loadOlderMessages()
     }
 }
 
-// Typing indicator
 const typingMenuOpen = ref(false)
 let hoverTimer
 
@@ -812,10 +765,8 @@ watch(
         await checkChannelExists()
         resetMessages()
 
-        // Set flag to prevent onScroll from triggering during initial load
         isScrollingProgrammatically = true
 
-        // Only fetch messages if online
         if (!isOffline.value) {
             await fetchMessages()
         }
@@ -823,14 +774,12 @@ watch(
         await nextTick()
         scrollToBottom()
 
-        // Add a longer delay before re-enabling scroll detection
         setTimeout(() => {
             isScrollingProgrammatically = false
         }, 300)
     }
 )
 
-// Watch for status changes and reload if coming back online
 watch(userStatus, async (newStatus, oldStatus) => {
     if (oldStatus === 'offline' && newStatus !== 'offline') {
         console.log('User came back online, reloading messages')
@@ -845,7 +794,7 @@ watch(userStatus, async (newStatus, oldStatus) => {
 function resetMessages() {
     messages.value = []
     currentPage = 1
-    hasMoreMessages.value = true // Reset the flag when switching channels
+    hasMoreMessages.value = true 
 }
 
 function scrollToBottom() {
@@ -857,20 +806,11 @@ function scrollToBottom() {
 }
 
 async function sendMessage() {
-    // Prevent sending if offline
-    // if (isOffline.value) {
-    //     $q.notify({
-    //         message: 'Cannot send messages while offline',
-    //         color: 'negative',
-    //         icon: 'wifi_off'
-    //     })
-    //     return
-    // }
+   
 
     const text = newMessage.value.trim()
     if (!text) return
 
-    // Handle slash commands
     if (text.startsWith('/')) {
         const name = text.slice(1).split(/\s+/)[0].toLowerCase()
         const cmd = slashCommands.find(c => c.name.toLowerCase() === name)
@@ -886,7 +826,6 @@ async function sendMessage() {
 
     const now = new Date()
 
-    // Create optimistic message with temporary ID
     const optimisticMessage = {
         id: `temp-${Date.now()}`,
         body: text,
@@ -896,15 +835,12 @@ async function sendMessage() {
         channelId: channelId.value
     }
 
-    // Add message to UI immediately (optimistic update)
     messages.value.push(optimisticMessage)
     newMessage.value = ''
 
-    // Scroll to bottom to show new message
     await nextTick()
     scrollToBottom()
 
-    // Send to backend
     try {
         const response = await axios.post(
             `${API_URL}/message`,
@@ -923,7 +859,6 @@ async function sendMessage() {
 
         console.log('Message sent successfully:', response.data)
 
-        // Replace optimistic message with real message from backend
         const realMessage = response.data.data
         const index = messages.value.findIndex(m => m.id === optimisticMessage.id)
         if (index !== -1) {
@@ -933,7 +868,6 @@ async function sendMessage() {
     } catch (error) {
         console.error('Failed to send message:', error)
 
-        // Remove optimistic message on error
         const index = messages.value.findIndex(m => m.id === optimisticMessage.id)
         if (index !== -1) {
             messages.value.splice(index, 1)
@@ -964,14 +898,13 @@ async function getChannelMeta() {
 }
 
 async function fetchLatestMessage() {
-    // Don't fetch if offline
     if (isOffline.value || isChannelRoute.value === false) return
 
     try {
         const response = await axios.get(`${API_URL}/channels/${channelId.value}/messages`, {
             params: {
-                page: 1,  // Always get first page (latest messages)
-                limit: 1,  // Only get 1 message
+                page: 1,  
+                limit: 1,  
             },
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('auth.token')}`,
@@ -984,11 +917,9 @@ async function fetchLatestMessage() {
         if (Array.isArray(fetchedMessages) && fetchedMessages.length > 0) {
             const latestMessage = fetchedMessages[0]
 
-            // Check if message already exists (avoid duplicates)
             const exists = messages.value.some(m => m.id === latestMessage.id)
 
             if (!exists) {
-                // Add to end of messages array
                 messages.value.push(latestMessage)
 
                 await nextTick()
@@ -1023,11 +954,9 @@ const loadChannels = inject('loadChannels')
 onMounted(async () => {
     console.log('[FE] onMounted triggered');
 
-    // Load initial settings
     await loadInitialSettings();
     console.log('[FE] Initial settings loaded');
 
-    // Request notification permission if not yet granted
     if (Notification.permission === 'default') {
         requestNotificationPermission();
         console.log('[FE] Notification permission requested');
@@ -1039,21 +968,17 @@ onMounted(async () => {
         return;
     }
 
-    // Fetch all channels for the user
     await getCurrentChannels();
 
     if (!userChannels.value.some(c => c.channel_id == channelId.value)) {
         console.log('[FE] Current channel no longer exists for user, redirecting to /');
         console.log('Current route:', router.currentRoute.value.fullPath);
-        // Clean up first
         resetMessages();
         await loadChannels();
 
-        // Then redirect
         await router.push('/');
     }
 
-    // Single subscription for all channels via user-specific channel
     const subscription = transmit.subscription(`user/${currentUser.id}`);
     console.log('[FE] Creating subscription for user:', currentUser.id);
 
@@ -1142,7 +1067,6 @@ onMounted(async () => {
     subscription.create();
     console.log('[FE] Subscription created successfully');
 
-    // Optionally fetch messages for the currently selected channel
     fetchMessages().then(() => {
         nextTick(() => scrollToBottom());
         console.log('[FE] Messages fetched and scrolled to bottom');

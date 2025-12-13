@@ -11,10 +11,8 @@ export default [
     meta: { requiresAuth: true },
     children: [
 
-      // Home/dashboard page
       { path: '', component: () => import('pages/IndexPage.vue') },
 
-      // 👇 ADD THIS ROUTE
      {
         path: 'channel/:id',
         name: 'channel',
